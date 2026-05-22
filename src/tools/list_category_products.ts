@@ -31,7 +31,7 @@ const inputSchema = z.object({
       }),
     ),
   site: z
-    .enum(["amz_us", "amz_uk", "amz_de", "amz_jp"])
+    .enum(["amz_us", "amz_uk", "amz_de", "amz_jp", "amz_fr", "amz_it", "amz_es", "amz_ca", "amz_au", "amz_sa", "amz_ae", "amz_br", "amz_mx"])
     .default("amz_us")
     .describe(
       t({
@@ -44,8 +44,8 @@ const inputSchema = z.object({
     .optional()
     .describe(
       t({
-        zh: "邮编（如 '10041'）。可选；未填后端按站点取默认值。",
-        en: "ZIP code (e.g. '10041'). Optional — backend falls back to a per-site default.",
+        zh: "邮编，必须匹配 site 站点所在国家（amz_us → 美国邮编，amz_jp → 日本邮编 …）。可选；不传时后端会从对应国家邮编池随机挑一个。跨国邮编（如 amz_us + 日本邮编）会被后端拒绝。Examples: 10001 (NY) / 90001 (LA) / 100-0001 (Tokyo).",
+        en: "ZIP code that must match the site country (amz_us → US zip, amz_jp → JP zip, ...). Optional; backend picks a random one from the per-country pool when omitted. Cross-country zips (e.g. amz_us + JP zip) are rejected by the backend. Examples: 10001 (NY) / 90001 (LA) / 100-0001 (Tokyo).",
       }),
     ),
   format: z

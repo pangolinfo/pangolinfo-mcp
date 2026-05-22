@@ -22,7 +22,7 @@ const inputSchema = z.object({
       }),
     ),
   site: z
-    .enum(["amz_us", "amz_uk", "amz_de", "amz_jp"])
+    .enum(["amz_us", "amz_uk", "amz_de", "amz_jp", "amz_fr", "amz_it", "amz_es", "amz_ca", "amz_au", "amz_sa", "amz_ae", "amz_br", "amz_mx"])
     .default("amz_us")
     .describe(
       t({

@@ -43,6 +43,11 @@ const inputSchema = z.object({
       "amz_it",
       "amz_es",
       "amz_ca",
+      "amz_au",
+      "amz_sa",
+      "amz_ae",
+      "amz_br",
+      "amz_mx",
     ])
     .default("amz_us")
     .describe(
@@ -56,8 +61,8 @@ const inputSchema = z.object({
     .optional()
     .describe(
       t({
-        zh: "邮编，用于按地区获取价格（如 '10001' 表示纽约）。可选。",
-        en: "ZIP code for region-specific pricing (e.g. '10001' for NY). Optional.",
+        zh: "邮编，必须匹配 site 站点所在国家（amz_us → 美国邮编，amz_jp → 日本邮编 …）。可选；不传时后端会从对应国家邮编池随机挑一个。跨国邮编（如 amz_us + 日本邮编）会被后端拒绝。Examples: 10001 (NY) / 90001 (LA) / 100-0001 (Tokyo).",
+        en: "ZIP code that must match the site country (amz_us → US zip, amz_jp → JP zip, ...). Optional; backend picks a random one from the per-country pool when omitted. Cross-country zips (e.g. amz_us + JP zip) are rejected by the backend. Examples: 10001 (NY) / 90001 (LA) / 100-0001 (Tokyo).",
       }),
     ),
   format: z
@@ -80,6 +85,11 @@ const SITE_TO_DOMAIN: Record<string, string> = {
   amz_it: "www.amazon.it",
   amz_es: "www.amazon.es",
   amz_ca: "www.amazon.ca",
+  amz_au: "www.amazon.com.au",
+  amz_sa: "www.amazon.sa",
+  amz_ae: "www.amazon.ae",
+  amz_br: "www.amazon.com.br",
+  amz_mx: "www.amazon.com.mx",
 };
 
 export const getAmazonProduct: Tool<typeof inputSchema> = {
