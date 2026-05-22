@@ -5,3 +5,16 @@ dist/
 .env.*
 !.env.example
 .DS_Store
+
+# 部署脚本: 含 ACR 密码 / API key 的本地脚本不进仓库.
+# 仓库只留 *.example 模板, 真实脚本由开发者本地从模板复制并填密码.
+deploy/deploy-mcp.sh
+deploy/deploy-mcp.cmd
+deploy/.local
+deploy/secrets/
+deploy/*.local.yaml
+
+# kubeconfig / 阿里云 cli 的临时凭据
+.kube/
+*.kubeconfig
+.aliyun/
