@@ -7,8 +7,7 @@
  * returns Apple's US design-patent hits with IRN / HOL / DETAIL_DATA / IMG /
  * IMG_DATA / DC / RD / STATUS / LCS fields. pointCost=2.
  *
- * BACKEND PERF CONTRACT (mirrors openclaw-skills/ai-go-to-market-intelligence/
- * scripts/wipo.py — backend reads OSS Parquet via DuckDB and rejects /
+ * BACKEND PERF CONTRACT (backend reads OSS Parquet via DuckDB and rejects /
  * full-scans on wrong params):
  *   - `source` is REQUIRED (USID / CNID / DEID / JPID / KRID / EMID / FRID
  *     / INID / ITID / ESID / CHID / HAGUE). Country codes auto-normalize:

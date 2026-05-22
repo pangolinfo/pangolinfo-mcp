@@ -1,15 +1,36 @@
 {
   "name": "pangolinfo-mcp",
   "version": "0.1.0",
-  "description": "Pangolinfo MCP server - expose Pangolinfo scrape APIs to AI tooling via Model Context Protocol.",
+  "description": "Pangolinfo MCP server - 17 Amazon e-commerce data tools (search, product detail, reviews, bestsellers, categories, niches, Google AI search, Google Trends, WIPO trademark) for AI assistants via Model Context Protocol.",
   "type": "module",
+  "license": "MIT",
+  "author": "Pangolinfo <support@pangolinfo.com>",
+  "homepage": "https://pangolinfo.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pangolinfo/pangolinfo-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/pangolinfo/pangolinfo-mcp/issues"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "amazon",
+    "ecommerce",
+    "ai-tools",
+    "claude",
+    "cursor",
+    "scraping"
+  ],
   "bin": {
     "pangolinfo-mcp": "./dist/server.js"
   },
   "main": "./dist/server.js",
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "build": "esbuild src/server.ts --bundle --platform=node --target=node18 --format=esm --outfile=dist/server.js --banner:js=\"#!/usr/bin/env node\" --packages=external",
