@@ -1,6 +1,6 @@
 {
   "name": "pangolinfo-mcp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Pangolinfo MCP server - 17 Amazon e-commerce data tools (search, product detail, reviews, bestsellers, categories, niches, Google AI search, Google Trends, WIPO trademark) for AI assistants via Model Context Protocol.",
   "type": "module",
   "license": "MIT",
@@ -24,18 +24,18 @@
     "scraping"
   ],
   "bin": {
-    "pangolinfo-mcp": "./dist/server.js"
+    "pangolinfo-mcp": "./dist/server.mjs"
   },
-  "main": "./dist/server.js",
+  "main": "./dist/server.mjs",
   "files": [
     "dist",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
-    "build": "esbuild src/server.ts --bundle --platform=node --target=node18 --format=esm --outfile=dist/server.js --banner:js=\"#!/usr/bin/env node\"",
+    "build": "esbuild src/server.ts --bundle --platform=node --target=node18 --format=esm --outfile=dist/server.mjs --banner:js=\"#!/usr/bin/env node\"",
     "dev": "tsx src/server.ts",
-    "start": "node dist/server.js",
+    "start": "node dist/server.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

@@ -6,7 +6,7 @@ Plug your favorite AI client (Claude Code, Cursor, Cline, Windsurf, Codex, Herme
 
 | | |
 |---|---|
-| **Version** | `0.1.0` |
+| **Version** | `0.1.1` |
 | **Tools** | 17 (16 backend + 1 self-introspection) |
 | **Transport** | stdio (MCP standard) |
 | **Runtime** | Node.js 18+ |
@@ -43,27 +43,27 @@ After the installer finishes, **restart your AI client** so it picks up the new 
 
 ### Manual install (just download one file)
 
-The release artifact is a **single self-contained `server.js`** (~800 KB) — all dependencies are bundled in. No `npm install` needed.
+The release artifact is a **single self-contained `server.mjs`** (~800 KB) — all dependencies are bundled in. No `npm install` needed.
 
 ```bash
 # macOS / Linux
 mkdir -p ~/.local/lib/pangolinfo-mcp
-curl -fsSL https://github.com/pangolinfo/pangolinfo-mcp/releases/latest/download/server.js \
-  -o ~/.local/lib/pangolinfo-mcp/server.js
-chmod +x ~/.local/lib/pangolinfo-mcp/server.js
+curl -fsSL https://github.com/pangolinfo/pangolinfo-mcp/releases/latest/download/server.mjs \
+  -o ~/.local/lib/pangolinfo-mcp/server.mjs
+chmod +x ~/.local/lib/pangolinfo-mcp/server.mjs
 ```
 
 ```powershell
 # Windows (PowerShell)
 $dir = "$env:LOCALAPPDATA\pangolinfo-mcp"
 New-Item -ItemType Directory -Force -Path $dir | Out-Null
-irm https://github.com/pangolinfo/pangolinfo-mcp/releases/latest/download/server.js `
-  -OutFile "$dir\server.js"
+irm https://github.com/pangolinfo/pangolinfo-mcp/releases/latest/download/server.mjs `
+  -OutFile "$dir\server.mjs"
 ```
 
 Then wire it into your AI client — see the per-client snippets below. Point `args` at the file you just downloaded.
 
-> **Developers**: to build from source, `git clone` this repo and run `npm install && npm run build`. The produced `dist/server.js` is identical to the release asset.
+> **Developers**: to build from source, `git clone` this repo and run `npm install && npm run build`. The produced `dist/server.mjs` is identical to the release asset.
 
 ---
 
@@ -77,7 +77,7 @@ Then wire it into your AI client — see the per-client snippets below. Point `a
 
 ## Manual configuration (per AI client)
 
-Replace `/abs/path/to/pangolinfo-mcp/dist/server.js` with your real path, and `pgl_xxxxxxxx` with your key.
+Replace `/abs/path/to/pangolinfo-mcp/dist/server.mjs` with your real path, and `pgl_xxxxxxxx` with your key.
 
 ### Claude Code (`~/.claude/settings.json`)
 
@@ -86,14 +86,14 @@ Replace `/abs/path/to/pangolinfo-mcp/dist/server.js` with your real path, and `p
   "mcpServers": {
     "pangolinfo": {
       "command": "node",
-      "args": ["/abs/path/to/pangolinfo-mcp/dist/server.js"],
+      "args": ["/abs/path/to/pangolinfo-mcp/dist/server.mjs"],
       "env": { "PANGOLINFO_API_KEY": "pgl_xxxxxxxx" }
     }
   }
 }
 ```
 
-> Prefer `claude mcp add --scope user pangolinfo node /abs/path/to/dist/server.js` — it writes the same entry without hand-editing JSON.
+> Prefer `claude mcp add --scope user pangolinfo node /abs/path/to/dist/server.mjs` — it writes the same entry without hand-editing JSON.
 
 ### Cursor (`~/.cursor/mcp.json`)
 
@@ -102,7 +102,7 @@ Replace `/abs/path/to/pangolinfo-mcp/dist/server.js` with your real path, and `p
   "mcpServers": {
     "pangolinfo": {
       "command": "node",
-      "args": ["/abs/path/to/pangolinfo-mcp/dist/server.js"],
+      "args": ["/abs/path/to/pangolinfo-mcp/dist/server.mjs"],
       "env": { "PANGOLINFO_API_KEY": "pgl_xxxxxxxx" }
     }
   }
@@ -118,7 +118,7 @@ Open **Cline → MCP Servers → Edit settings JSON**, then add:
   "mcpServers": {
     "pangolinfo": {
       "command": "node",
-      "args": ["/abs/path/to/pangolinfo-mcp/dist/server.js"],
+      "args": ["/abs/path/to/pangolinfo-mcp/dist/server.mjs"],
       "env": { "PANGOLINFO_API_KEY": "pgl_xxxxxxxx" }
     }
   }
@@ -135,7 +135,7 @@ If you're on the standalone Cline CLI, use `~/.cline/data/settings/cline_mcp_set
   "mcpServers": {
     "pangolinfo": {
       "command": "node",
-      "args": ["/abs/path/to/pangolinfo-mcp/dist/server.js"],
+      "args": ["/abs/path/to/pangolinfo-mcp/dist/server.mjs"],
       "env": { "PANGOLINFO_API_KEY": "pgl_xxxxxxxx" }
     }
   }
@@ -147,7 +147,7 @@ If you're on the standalone Cline CLI, use `~/.cline/data/settings/cline_mcp_set
 ```toml
 [mcp_servers.pangolinfo]
 command = "node"
-args = ["/abs/path/to/pangolinfo-mcp/dist/server.js"]
+args = ["/abs/path/to/pangolinfo-mcp/dist/server.mjs"]
 
 [mcp_servers.pangolinfo.env]
 PANGOLINFO_API_KEY = "pgl_xxxxxxxx"
@@ -159,7 +159,7 @@ PANGOLINFO_API_KEY = "pgl_xxxxxxxx"
 mcp_servers:
   pangolinfo:
     command: node
-    args: ["/abs/path/to/pangolinfo-mcp/dist/server.js"]
+    args: ["/abs/path/to/pangolinfo-mcp/dist/server.mjs"]
     env:
       PANGOLINFO_API_KEY: pgl_xxxxxxxx
 ```
@@ -171,7 +171,7 @@ mcp_servers:
   "mcpServers": {
     "pangolinfo": {
       "command": "node",
-      "args": ["/abs/path/to/pangolinfo-mcp/dist/server.js"],
+      "args": ["/abs/path/to/pangolinfo-mcp/dist/server.mjs"],
       "env": { "PANGOLINFO_API_KEY": "pgl_xxxxxxxx" }
     }
   }
@@ -266,9 +266,9 @@ Expected: ~0.75 credits deducted, ~300 KB of structured product data returned.
 ```bash
 npm install
 npm run dev        # tsx src/server.ts — hot-reload
-npm run build      # esbuild → dist/server.js
+npm run build      # esbuild → dist/server.mjs
 npm run typecheck  # tsc --noEmit
-npm start          # node dist/server.js
+npm start          # node dist/server.mjs
 ```
 
 ### Project layout
