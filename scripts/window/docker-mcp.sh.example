@@ -1,0 +1,16 @@
+#!/bin/sh
+#
+# Pangolinfo MCP - docker build + push 到阿里云 ACR (WSL 内执行) - 模板
+#
+# 用法:
+#   1. 复制本模板: cp docker-mcp.sh.example docker-mcp.sh
+#   2. 填真实 ACR 密码 (跟 ext-scrapeapi 用的是同一套)
+#   3. 不要直接跑这个 .sh, 跑 deploy-mcp.cmd 走完整流程
+#
+# docker-mcp.sh 已在 .gitignore 里, 这个 .example 是给团队成员的模板.
+sudo docker build -t pangolinfo-mcp .
+sudo docker login --username=<填 ACR 用户名> --password=<填 ACR 密码> registry-intl.ap-southeast-1.aliyuncs.com
+sudo docker tag pangolinfo-mcp registry-intl.ap-southeast-1.aliyuncs.com/pangolinfo-prod/pangolinfo-mcp:${1:-latest}
+sudo docker tag pangolinfo-mcp registry-intl.ap-southeast-1.aliyuncs.com/pangolinfo-prod/pangolinfo-mcp:latest
+sudo docker push registry-intl.ap-southeast-1.aliyuncs.com/pangolinfo-prod/pangolinfo-mcp:${1:-latest}
+sudo docker push registry-intl.ap-southeast-1.aliyuncs.com/pangolinfo-prod/pangolinfo-mcp:latest

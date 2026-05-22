@@ -141,13 +141,37 @@ Header: Authorization: Bearer pgl_xxxxxxxxxxxx
 
 ## 升级镜像 (以后改了 MCP 代码怎么发新版)
 
-```bash
-# 在 D:/newCode/pangolinfo-platform/pangolinfo-mcp/ 下
-wsl docker build -t registry-intl.ap-southeast-1.aliyuncs.com/pangolinfo-prod/pangolinfo-mcp:0.2.1 .
-wsl docker push registry-intl.ap-southeast-1.aliyuncs.com/pangolinfo-prod/pangolinfo-mcp:0.2.1
-# 然后 ACK 控制台 → 无状态 → pangolinfo-mcp → 升级 → 镜像 tag 改成 0.2.1 → 提交
-# 滚动更新,无中断
+跟 `ext-scrapeapi` 同款的双层脚本: Windows `.cmd` 入口 → WSL `.sh` 干活。
+
+**Step 1 — 在本机一行命令 build + 推:**
+
+```cmd
+cd D:\newCode\pangolinfo-platform\pangolinfo-mcp
+scripts\window\deploy-mcp.cmd 0.2.1
 ```
+
+参数是新的 tag。脚本会:
+1. 切到 pangolinfo-mcp 根目录
+2. 通过 WSL 调 `scripts/window/docker-mcp.sh`,在 WSL 内执行:
+   - `docker build` (Dockerfile 多阶段会自己跑 npm ci + npm run build)
+   - `docker login` 阿里云 ACR
+   - `docker push :0.2.1` 和 `:latest`
+3. 完成提示去 ACK 控制台改 tag
+
+**Step 2 — ACK 控制台触发滚动更新:**
+
+`crawler` 集群 → 工作负载 → 无状态 → `pangolinfo-mcp` → **升级** → 把 image tag 从旧版本改成 `0.2.1` → **提交**
+
+ACK 自动一个一个 Pod 滚动替换,2 副本期间至少 1 个在跑,**零停机**。
+
+**注意**:
+- `scripts/window/docker-mcp.sh` 含 ACR 真密码,**已在 `.gitignore`**,不会被提交。
+- `docker-mcp.sh.example` 是模板,team 新成员 clone 仓库后:
+  ```bash
+  cp scripts/window/docker-mcp.sh.example scripts/window/docker-mcp.sh
+  # 编辑填真实密码 (跟 scrapeapi 是同一套)
+  ```
+- 不要用 Git Bash 直接跑 `docker push` —— 国内→新加坡 ACR 国际版只通过 WSL2 网络栈才能连。`.cmd` 已经包了这一层。
 
 ---
 

@@ -6,8 +6,12 @@ dist/
 !.env.example
 .DS_Store
 
-# 部署脚本: 含 ACR 密码 / API key 的本地脚本不进仓库.
-# 仓库只留 *.example 模板, 真实脚本由开发者本地从模板复制并填密码.
+# 部署脚本: 含真实 ACR 密码的 .sh 不进仓库; 模板 .example 进.
+# 跟 ext-scrapeapi 同样的结构 (scripts/window/).
+scripts/window/docker-mcp.sh
+!scripts/window/docker-mcp.sh.example
+
+# 兼容老路径 (万一有人在 deploy/ 下手动建了)
 deploy/deploy-mcp.sh
 deploy/deploy-mcp.cmd
 deploy/.local
