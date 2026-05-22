@@ -17,6 +17,7 @@ import { z } from "zod";
 
 import type { Tool } from "./_types.js";
 import { t, getLocale } from "../i18n.js";
+import { SERVER_VERSION } from "../version.js";
 
 const inputSchema = z.object({
   detail: z
@@ -312,7 +313,7 @@ Cost: 0 points (local data, no backend round-trip).`,
 
     const summary = {
       server: "pangolinfo-mcp",
-      version: "0.1.0",
+      version: SERVER_VERSION,
       locale,
       // Two distinct counts to avoid client confusion:
       //   - wireTotalCount: total tools visible via tools/list (includes

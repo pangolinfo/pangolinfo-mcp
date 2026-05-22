@@ -43,6 +43,7 @@ import { CONFIG } from "./config.js";
 import { PangolinfoError, hintFor } from "./errors.js";
 import { tools } from "./tools/index.js";
 import type { Tool, ToolContext, ToolLogger } from "./tools/_types.js";
+import { SERVER_VERSION } from "./version.js";
 
 /** Logger that writes to stderr — stdout is reserved for the stdio MCP protocol. */
 const logger: ToolLogger = {
@@ -54,8 +55,6 @@ const logger: ToolLogger = {
     process.stderr.write(`[pangolinfo-mcp][error] ${msg}${suffix}\n`);
   },
 };
-
-const SERVER_VERSION = "0.2.0";
 
 /**
  * Wire a Server instance against a given ToolContext (which carries the
