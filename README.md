@@ -41,18 +41,29 @@ irm https://pangolinfo.dev/install.ps1 | iex; `
 
 After the installer finishes, **restart your AI client** so it picks up the new `mcpServers` entry.
 
-### Manual install (developers / advanced users)
+### Manual install (just download one file)
 
-Requires Node.js 18+ and git.
+The release artifact is a **single self-contained `server.js`** (~800 KB) — all dependencies are bundled in. No `npm install` needed.
 
 ```bash
-git clone https://github.com/pangolinfo/pangolinfo-mcp.git
-cd pangolinfo-mcp
-npm install
-npm run build       # produces dist/server.js
+# macOS / Linux
+mkdir -p ~/.local/lib/pangolinfo-mcp
+curl -fsSL https://github.com/pangolinfo/pangolinfo-mcp/releases/latest/download/server.js \
+  -o ~/.local/lib/pangolinfo-mcp/server.js
+chmod +x ~/.local/lib/pangolinfo-mcp/server.js
 ```
 
-Then wire it into your AI client manually — see the per-client snippets below.
+```powershell
+# Windows (PowerShell)
+$dir = "$env:LOCALAPPDATA\pangolinfo-mcp"
+New-Item -ItemType Directory -Force -Path $dir | Out-Null
+irm https://github.com/pangolinfo/pangolinfo-mcp/releases/latest/download/server.js `
+  -OutFile "$dir\server.js"
+```
+
+Then wire it into your AI client — see the per-client snippets below. Point `args` at the file you just downloaded.
+
+> **Developers**: to build from source, `git clone` this repo and run `npm install && npm run build`. The produced `dist/server.js` is identical to the release asset.
 
 ---
 

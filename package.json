@@ -33,7 +33,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "esbuild src/server.ts --bundle --platform=node --target=node18 --format=esm --outfile=dist/server.js --banner:js=\"#!/usr/bin/env node\" --packages=external",
+    "build": "esbuild src/server.ts --bundle --platform=node --target=node18 --format=esm --outfile=dist/server.js --banner:js=\"#!/usr/bin/env node\"",
     "dev": "tsx src/server.ts",
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit"
