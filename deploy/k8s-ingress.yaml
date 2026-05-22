@@ -1,0 +1,78 @@
+# Pangolinfo MCP Ingress — 暴露 mcp.pangolinfo.com 到公网
+#
+# ⚠️ 这个文件有两个版本,选一个适合你 ACK 集群当前 Ingress 类型的:
+#   - 版本 A: nginx-ingress (社区版,annotations 前缀 nginx.ingress.kubernetes.io/)
+#   - 版本 B: 阿里云 ALB Ingress (alibabacloud-ingress-controller, annotations 前缀 alb.ingress.kubernetes.io/)
+#
+# 怎么判断你用哪个:
+#   ACK 控制台 -> 网络 -> 路由 Ingress -> 看现有的 scrapeapi Ingress 的 annotations
+#   - 如果 annotations 里出现 nginx.ingress.kubernetes.io/* -> 用版本 A
+#   - 如果出现 alb.ingress.kubernetes.io/* -> 用版本 B
+#
+# 把不适用的版本整段删掉再 apply。
+# ============================================================
+# 版本 A: nginx-ingress (社区 controller)
+# ============================================================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pangolinfo-mcp
+  namespace: default
+  annotations:
+    # 复用 scrapeapi 的 cert-manager 证书签发(如果有)
+    # cert-manager.io/cluster-issuer: letsencrypt-prod
+    #
+    # MCP 协议有 SSE (streamable HTTP),需要长连接不缓冲,以下三条务必加:
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    # 大请求体(tools/list 返回 17 工具描述,~30 KB,加冗余)
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+spec:
+  ingressClassName: nginx  # 跟你 scrapeapi 的 ingressClass 保持一致
+  tls:
+    - hosts:
+        - mcp.pangolinfo.com
+      secretName: mcp-pangolinfo-tls  # cert-manager 自动签证书后写入这个 secret
+                                      # 或者手动创建一个 secret 装 wildcard 证书
+  rules:
+    - host: mcp.pangolinfo.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: pangolinfo-mcp
+                port:
+                  number: 80
+---
+# ============================================================
+# 版本 B: 阿里云 ALB Ingress
+# 如果用版本 A 请整段删掉以下内容!
+# ============================================================
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: pangolinfo-mcp
+#   namespace: default
+#   annotations:
+#     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
+#     # 复用阿里云证书 (在「数字证书管理服务」里上传过的证书 ID)
+#     alb.ingress.kubernetes.io/certificate-id: "ap-southeast-1:<你的证书ID>"
+#     # SSE 长连接超时
+#     alb.ingress.kubernetes.io/request-timeout: "3600"
+#     alb.ingress.kubernetes.io/response-timeout: "3600"
+# spec:
+#   ingressClassName: alb
+#   rules:
+#     - host: mcp.pangolinfo.com
+#       http:
+#         paths:
+#           - path: /
+#             pathType: Prefix
+#             backend:
+#               service:
+#                 name: pangolinfo-mcp
+#                 port:
+#                   number: 80

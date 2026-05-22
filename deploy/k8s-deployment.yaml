@@ -1,0 +1,121 @@
+# Pangolinfo MCP Server — Kubernetes Deployment
+#
+# 部署到阿里云 ACK (crawler 集群, ap-southeast-1, default namespace)
+# 使用方式: ACK 控制台 -> 工作负载 -> 无状态 -> 「使用 YAML 创建」 -> 整段贴入
+#
+# 镜像: registry-intl.ap-southeast-1.aliyuncs.com/pangolinfo-prod/pangolinfo-mcp:0.2.0
+# 端口: 3000 (HTTP, /mcp 协议端点 + /health 探针)
+# 多租户: API key 通过每次请求的 ?api_key= 或 Authorization 头传入,不存集群侧
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pangolinfo-mcp
+  namespace: default
+  labels:
+    app: pangolinfo-mcp
+    component: mcp-server
+spec:
+  replicas: 2  # 双副本起步,流量来了再 HPA 自动扩
+  selector:
+    matchLabels:
+      app: pangolinfo-mcp
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0  # 滚动更新时不中断服务
+  template:
+    metadata:
+      labels:
+        app: pangolinfo-mcp
+        component: mcp-server
+    spec:
+      containers:
+        - name: mcp-server
+          image: registry-intl.ap-southeast-1.aliyuncs.com/pangolinfo-prod/pangolinfo-mcp:0.2.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          env:
+            - name: PANGOLINFO_TRANSPORT
+              value: "http"
+            - name: PORT
+              value: "3000"
+            - name: NODE_ENV
+              value: "production"
+            # 如果 scrapeapi 在同集群,改这里指向 svc 内网名(免公网回环):
+            # - name: PANGOLINFO_SCRAPE_BASE
+            #   value: "http://ext-scrapeapi.default.svc.cluster.local:8080"
+            #
+            # 默认走公网:
+            - name: PANGOLINFO_SCRAPE_BASE
+              value: "https://scrapeapi.pangolinfo.com"
+          resources:
+            requests:
+              cpu: "100m"     # 0.1 核基线
+              memory: "128Mi"
+            limits:
+              cpu: "1000m"    # 1 核上限(单进程 node 用不完)
+              memory: "512Mi"
+          # liveness: 容器是否活着 — 死了 kubelet 重启它
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          # readiness: 是否准备好接流量 — 没好就从 Service endpoint 摘掉
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 2
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 2
+          # graceful shutdown: SIGTERM 后 server.ts 有 10s drain 窗口
+          terminationGracePeriodSeconds: 15
+---
+# Service: 集群内暴露 pangolinfo-mcp,供 Ingress 路由到
+apiVersion: v1
+kind: Service
+metadata:
+  name: pangolinfo-mcp
+  namespace: default
+  labels:
+    app: pangolinfo-mcp
+spec:
+  type: ClusterIP  # 仅集群内,公网走 Ingress
+  selector:
+    app: pangolinfo-mcp
+  ports:
+    - name: http
+      port: 80          # Service 对外端口
+      targetPort: 3000  # 容器端口
+      protocol: TCP
+---
+# HorizontalPodAutoscaler: CPU 用满 70% 时自动扩到 5 副本
+# (可选 — 流量小可以先不上,等真有客户再启)
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: pangolinfo-mcp
+  namespace: default
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: pangolinfo-mcp
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
