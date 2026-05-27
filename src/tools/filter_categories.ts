@@ -168,17 +168,17 @@ export const filterCategories: Tool<typeof inputSchema> = {
     zh: `[Amazon 类目商业指标筛选] 按销量/GMS/搜索量/转化率/退货率/价格档位/竞品密度等数十维指标筛类目，或当作"类目详情"接口取单个类目全量指标。
 Use when: 用户说"找一些值得做的类目""筛销量大的类目""退货率低的类目""高搜索量但竞品少的类目""看看 X 类目（categoryId）的全部指标"；类目层面的蓝海挖掘；要某个类目的 30+ 商业指标快照。
 Don't use: 想筛细分 niche 而非整类目（用 filter_niches，颗粒度更细）；想看类目下的具体商品（用 list_category_products）；只想要类目名字（用 get_category_paths）。
-Returns: data.items.data[{ id, categoryId, marketplaceId, timeRange, sampleScope, snapshotDate, unitSoldSum, glanceViewsSum, searchVolumeSum, netShippedGmsSum, buyBoxPriceAvg, buyBoxPriceTier, searchToPurchaseRatio, returnRatio, asinCount, offersPerAsin, newAsinCount, newBrandCount, avgAdSpendPerClick, unitSoldTrendDirection, unitSoldChangeRateBucket, ... 趋势 + 分位数桶等数十字段 }] + pagination。
+Returns: data.items.data[{ id, categoryId, marketplaceId, timeRange, sampleScope, snapshotDate, unitSoldSum, glanceViewsSum, searchVolumeSum, netShippedGmsSum, buyBoxPriceAvg, buyBoxPriceTier, searchToPurchaseRatio, returnRatio, asinCount, offersPerAsin, newAsinCount, newBrandCount, avgAdSpendPerClick, unitSoldTrendDirection, unitSoldChangeRateBucket, ... 趋势 + 分位数桶等数十字段 }] + data.items.pagination.{ total, page, size, hasNext }。**翻页**: 用 page 参数（默认 1，从 1 开始，size 上限 10）；pagination.hasNext=true 表示还有下一页，hasNext=false 表示已到底。
 Pair with: ↑ 必填 timeRange (常用 'l7d') + sampleScope ('all_asin') + marketplaceId（默认 US）；categoryId 来自 search_categories / get_category_children；↓ 出来的高潜类目喂 list_category_products / list_bestsellers 看真实商品。
-Cost: ~1 积点/次, ~5s。
-Tips: size 上限 10（后端硬限制）；长尾筛选字段（unitSoldTrendDirections / metricChangeRateBuckets 等数十个）走 extraFilters 透传。`,
+Cost: ~1 积点/页, ~5s。
+Tips: size 上限 10（后端硬限制）；翻页只在用户明确要"看更多候选类目"时才做，单次详情/快速筛选首页够用；长尾筛选字段（unitSoldTrendDirections / metricChangeRateBuckets 等数十个）走 extraFilters 透传。`,
     en: `[Amazon category commercial-metrics filter] Filter categories by dozens of metrics (sales, GMS, search volume, conversion, return rate, price tier, competitor density, …) — or use as a "category detail" endpoint by passing a single categoryId.
 Use when: user says "find categories worth entering" / "high-sales categories" / "low return-rate categories" / "high search-volume but low competition categories" / "show me all metrics for category X"; category-level blue-ocean hunt; getting the 30+ metric snapshot of one category.
 Don't use: for niche-level (use filter_niches — finer granularity); for actual products in a category (use list_category_products); for just the readable name (use get_category_paths).
-Returns: data.items.data[{ id, categoryId, marketplaceId, timeRange, sampleScope, snapshotDate, unitSoldSum, glanceViewsSum, searchVolumeSum, netShippedGmsSum, buyBoxPriceAvg, buyBoxPriceTier, searchToPurchaseRatio, returnRatio, asinCount, offersPerAsin, newAsinCount, newBrandCount, avgAdSpendPerClick, unitSoldTrendDirection, unitSoldChangeRateBucket, ... trend + quantile-bucket fields }] + pagination.
+Returns: data.items.data[{ id, categoryId, marketplaceId, timeRange, sampleScope, snapshotDate, unitSoldSum, glanceViewsSum, searchVolumeSum, netShippedGmsSum, buyBoxPriceAvg, buyBoxPriceTier, searchToPurchaseRatio, returnRatio, asinCount, offersPerAsin, newAsinCount, newBrandCount, avgAdSpendPerClick, unitSoldTrendDirection, unitSoldChangeRateBucket, ... trend + quantile-bucket fields }] + data.items.pagination.{ total, page, size, hasNext }. **Pagination**: use the 'page' param (default 1, 1-based, size capped at 10); 'pagination.hasNext=true' means more pages exist, 'hasNext=false' means last page.
 Pair with: ↑ required timeRange ('l7d' common) + sampleScope ('all_asin') + marketplaceId (defaults US); categoryId from search_categories / get_category_children; ↓ feed high-potential categories into list_category_products / list_bestsellers for real listings.
-Cost: ~1 point/call, ~5s.
-Tips: size capped at 10 (backend hard limit); long-tail filter fields (unitSoldTrendDirections / metricChangeRateBuckets / dozens more) pass through via extraFilters.`,
+Cost: ~1 point/page, ~5s.
+Tips: size capped at 10 (backend hard limit); only paginate when the user explicitly asks for more candidate categories — single-detail or quick-filter calls are fine on page 1; long-tail filter fields (unitSoldTrendDirections / metricChangeRateBuckets / dozens more) pass through via extraFilters.`,
   }),
   inputSchema,
   async execute(input, ctx) {

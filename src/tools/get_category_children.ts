@@ -57,15 +57,15 @@ export const getCategoryChildren: Tool<typeof inputSchema> = {
     zh: `[Amazon 类目树下钻] 从根节点或任意类目逐级下钻，列出直接子类目。
 Use when: 用户说"看一下 Amazon 类目树""X 类目下有什么子类""列出顶级大类""下钻到三级类目"；做类目地图时；search_categories 给了多个候选类目想看哪个层级合适。
 Don't use: 想按关键词跳到类目（用 search_categories 更快）；想要类目下的商品列表而非子类目（用 list_category_products）。
-Returns: data.items.data[{ browseNodeId, browseNodeIdPath, browseNodeName, browseNodeNameCn, parentBrowseNodeIdPath, productType, sellable, hasChild }]; 留空 parentBrowseNodeIdPath 返回顶级根节点；hasChild=1 说明可继续下钻。
+Returns: data.items.data[{ browseNodeId, browseNodeIdPath, browseNodeName, browseNodeNameCn, parentBrowseNodeIdPath, productType, sellable, hasChild }] + data.items.pagination.{ total, page, size, hasNext }；留空 parentBrowseNodeIdPath 返回顶级根节点；hasChild=1 说明可继续下钻。**翻页**: 用 page 参数（默认 1，size 默认 10、上限 50）；pagination.hasNext=true 表示该层子类目还没列完。
 Pair with: ↑ 起点 parentBrowseNodeIdPath 可留空（顶级）或来自 search_categories；↓ 每条结果的 browseNodeIdPath 可喂回本工具再下钻一层，或喂 list_category_products / filter_categories。
-Cost: ~1 积点/次, ~3s。`,
+Cost: ~1 积点/页, ~3s。**翻页只在某节点子类目特别多（>size）且用户要"看全部子类"时才做**。`,
     en: `[Amazon category tree drilldown] List direct children from any node (or omit parent to start at the roots).
 Use when: user says "show me Amazon's category tree" / "subcategories under X" / "list top-level departments" / "drill to level 3"; building a category map; deciding which level is right after search_categories returned candidates.
 Don't use: when a keyword jump is faster (use search_categories); when you want products in the category, not its subcategories (use list_category_products).
-Returns: data.items.data[{ browseNodeId, browseNodeIdPath, browseNodeName, browseNodeNameCn, parentBrowseNodeIdPath, productType, sellable, hasChild }]; omit parentBrowseNodeIdPath to fetch top-level roots; hasChild=1 means the node has further children.
+Returns: data.items.data[{ browseNodeId, browseNodeIdPath, browseNodeName, browseNodeNameCn, parentBrowseNodeIdPath, productType, sellable, hasChild }] + data.items.pagination.{ total, page, size, hasNext }; omit parentBrowseNodeIdPath to fetch top-level roots; hasChild=1 means the node has further children. **Pagination**: use the 'page' param (default 1, size default 10 / max 50); 'pagination.hasNext=true' means the node has more children not yet listed.
 Pair with: ↑ parentBrowseNodeIdPath either omitted (roots) or from search_categories; ↓ feed each result's browseNodeIdPath back in to drill another level, or into list_category_products / filter_categories.
-Cost: ~1 point/call, ~3s.`,
+Cost: ~1 point/page, ~3s. **Only paginate when a node has unusually many children (>size) and the user explicitly wants all subcategories.**`,
   }),
   inputSchema,
   async execute(input, ctx) {
