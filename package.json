@@ -1,7 +1,7 @@
 {
   "name": "pangolinfo-mcp",
   "version": "0.2.1",
-  "description": "Pangolinfo MCP server - 17 Amazon e-commerce data tools (search, product detail, reviews, bestsellers, categories, niches, Google AI search, Google Trends, WIPO trademark) for AI assistants via Model Context Protocol.",
+  "description": "Pangolinfo MCP server - 18 Amazon e-commerce data tools (search, product detail, reviews, bestsellers, categories, niches, Amazon Rufus AI conversational picks, Google AI search, Google Trends, WIPO trademark) for AI assistants via Model Context Protocol.",
   "type": "module",
   "license": "MIT",
   "author": "Pangolinfo <support@pangolinfo.com>",

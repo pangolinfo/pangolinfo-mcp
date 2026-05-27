@@ -24,10 +24,11 @@ import { searchLocalMaps } from "./search_local_maps.js";
 import { wipoSearch } from "./wipo_search.js";
 import { googleAiSearch } from "./google_ai_search.js";
 import { googleTrends } from "./google_trends.js";
+import { searchAmazonAlexa } from "./search_amazon_alexa.js";
 import { pangolinfoCapabilities } from "./pangolinfo_capabilities.js";
 
 /**
- * v0.1 真实可用 = 17 个 tool（已用真实 API Key 联调）。
+ * v0.3.0 真实可用 = 18 个 tool（17 业务 + 1 自省 pangolinfo_capabilities）。
  * pangolinfo_capabilities 放在第一位 — 这是 AI 第一次接入时建议先调的自省接口。
  */
 export const tools: Tool[] = [
@@ -48,4 +49,5 @@ export const tools: Tool[] = [
   wipoSearch,
   googleAiSearch,
   googleTrends,
+  searchAmazonAlexa,
 ];

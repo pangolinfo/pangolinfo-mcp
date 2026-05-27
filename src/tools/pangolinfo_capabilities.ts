@@ -25,7 +25,7 @@ const inputSchema = z.object({
     .default("summary")
     .describe(
       t({
-        zh: "'summary' 返回工具清单 + 典型链路（默认，省 token）；'full' 把 16 个 tool 的完整 description 也一并展开（约 8KB，第一次接入或上下文不紧时用）。",
+        zh: "'summary' 返回工具清单 + 典型链路（默认，省 token）；'full' 把 17 个 tool 的完整 description 也一并展开（约 8KB，第一次接入或上下文不紧时用）。",
         en: "'summary' returns tool catalog + canonical workflows (default, token-light); 'full' also expands the full description of every tool (~8KB — use on first integration or when context budget allows).",
       }),
     ),
@@ -64,6 +64,15 @@ const TOOL_META: ToolMeta[] = [
     oneLiner: {
       zh: "按 ASIN 翻页拉真实买家评论",
       en: "Page-fetch real buyer reviews for an ASIN",
+    },
+  },
+  {
+    name: "search_amazon_alexa",
+    cost: "6pt/call · ~30s",
+    domain: "amazon",
+    oneLiner: {
+      zh: "用自然语言问 Amazon Rufus，拿结构化商品推荐",
+      en: "Ask Amazon Rufus in natural language for grouped product picks",
     },
   },
   {
@@ -252,6 +261,18 @@ const WORKFLOWS = [
     note: {
       zh: "先从一个已知 ASIN 拿到 seller.id，再扫该 seller 全部铺货。",
       en: "Pull seller.id from one known ASIN, then enumerate the seller's full catalog.",
+    },
+  },
+  {
+    title: { zh: "🤖 AI 场景化选品", en: "🤖 Scenario-based AI sourcing" },
+    steps: [
+      "search_amazon_alexa",
+      "get_amazon_product",
+      "get_amazon_reviews",
+    ],
+    note: {
+      zh: "用户只有场景没有关键词时：Rufus 给出多组候选商品 → 单 ASIN 深拆 → 差评挖痛点。固定 6pt/次，建议 prompts ≤3 条以保响应稳定。",
+      en: "When the user has a scene but no keyword: Rufus returns grouped candidates → single-ASIN deep-dive → critical-review pain points. Flat 6pt/call; keep prompts ≤3 for stable latency.",
     },
   },
 ];

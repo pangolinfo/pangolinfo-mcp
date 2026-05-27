@@ -1,7 +1,7 @@
 # Pangolinfo MCP — Tools Map
 
 > 给 AI Agent 和工程师同时看的工具协同图。
-> Live：17（含 `pangolinfo_capabilities` 自省工具）。
+> Live：18（17 业务 + 1 自省 `pangolinfo_capabilities`）。
 
 ## 🚀 给 AI 的快速入口
 
@@ -14,12 +14,13 @@
 
 ## 工具按业务域分组
 
-### 🛒 Amazon 抓取（7）
+### 🛒 Amazon 抓取（8）
 | Tool | 一句话 | 必填 | 成本 |
 |---|---|---|---|
 | `search_amazon` | 关键词 SERP 首屏 ASIN 列表 | `keyword` | 1pt / ~5s |
 | `get_amazon_product` | 按 ASIN 抓单品完整 PDP | `asin` | 1pt / ~5s |
 | `get_amazon_reviews` | 按 ASIN 翻页拉真实评论 | `asin` | **10pt/页** / ~10s |
+| `search_amazon_alexa` | 用自然语言问 Amazon Rufus，拿分组商品推荐 | `prompts[]` | **6pt/次** / ~30s |
 | `list_bestsellers` | 类目热销榜 Top-100 + 24h 变化 | `categorySlug` | 1pt / ~5s |
 | `list_new_releases` | 类目新品榜（30 天） | `categorySlug` | 1pt / ~5s |
 | `list_seller_products` | 卖家店铺全部商品 | `sellerId` | 1pt / ~5s |
