@@ -18,6 +18,12 @@ deploy/.local
 deploy/secrets/
 deploy/*.local.yaml
 
+# 本地用的 ACK YAML 粘贴模板 (含 redeploy-timestamp 等频繁变的字段)
+deploy/k8s-deployment-aliyun-paste.yaml
+
+# Windows 误产物 (printf >/dev/null 在 cmd 下会被解释为创建 nul 文件)
+nul
+
 # kubeconfig / 阿里云 cli 的临时凭据
 .kube/
 *.kubeconfig

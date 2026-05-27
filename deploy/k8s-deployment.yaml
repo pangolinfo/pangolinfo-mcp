@@ -32,8 +32,8 @@ spec:
     spec:
       containers:
         - name: mcp-server
-          image: registry-intl.ap-southeast-1.aliyuncs.com/pangolinfo-prod/pangolinfo-mcp:0.2.0
-          imagePullPolicy: IfNotPresent
+          image: registry-intl.ap-southeast-1.aliyuncs.com/pangolinfo-prod/pangolinfo-mcp:0.2.1
+          imagePullPolicy: Always
           ports:
             - name: http
               containerPort: 3000
