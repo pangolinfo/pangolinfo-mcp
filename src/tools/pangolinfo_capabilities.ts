@@ -80,8 +80,8 @@ const TOOL_META: ToolMeta[] = [
     cost: "1pt/~5s",
     domain: "amazon",
     oneLiner: {
-      zh: "类目 Best Sellers Top-100 + 24h 排名变化",
-      en: "Category Best Sellers Top-100 with 24h rank deltas",
+      zh: "类目 Best Sellers Top-50 + 24h 排名变化",
+      en: "Category Best Sellers Top-50 with 24h rank deltas",
     },
   },
   {

@@ -75,13 +75,13 @@ export const listCategoryProducts: Tool<typeof inputSchema> = {
   description: t({
     zh: `[Amazon 类目商品列表] 按 Browse Node ID 列出该类目下的具体在售商品（分页，每页 24 条）。
 Use when: 用户说"X 类目卖什么""列出类目 12345 下的商品""看这个类目都有些什么"；选品时拿到 categoryId 后看真实在售品；竞品调研时看类目铺货密度。
-Don't use: 只想要 Top-100 龙头（用 list_bestsellers，更便宜信号更聚焦）；要类目聚合指标（销量/搜索量/竞品密度等用 filter_categories）；要利基 niche 而非整类目（用 filter_niches）。
+Don't use: 只想要 Top-50 龙头（用 list_bestsellers，更便宜信号更聚焦）；要类目聚合指标（销量/搜索量/竞品密度等用 filter_categories）；要利基 niche 而非整类目（用 filter_niches）。
 Returns: data.json[0].data.{ pageIndex, maxPage, nextPage, categoryName, pagination, results[{ asin, title, price, star, rating, rank, img }] } —— 每页 24 条。**翻页**: 用 page 参数（默认 1，从 1 开始）；nextPage 为下一页页码，nextPage=null 或 page>=maxPage 表示到底。
 Pair with: ↑ nodeId 常来自 search_categories（按关键词找类目）或 get_category_children（树状下钻）；↓ asin 喂 get_amazon_product；categoryId 同时也能喂 filter_categories 取聚合指标。
 Cost: ~1 积点/页, ~5s。**翻页只在用户明确要"更多/全部"时才做**，否则首页够用。`,
     en: `[Amazon category listing] List concrete on-sale products under a Browse Node ID (paginated, 24 rows/page).
 Use when: user says "what's selling in category X" / "list products in node 12345" / "show me what's in this category"; after picking a categoryId during scouting, you want to see real listings; competitor-research on category density.
-Don't use: when only the top-100 winners matter (use list_bestsellers — cheaper and more signal); for category-level aggregate metrics (use filter_categories — sales/search volume/competitor density); for niche rather than full category (use filter_niches).
+Don't use: when only the top-50 winners matter (use list_bestsellers — cheaper and more signal); for category-level aggregate metrics (use filter_categories — sales/search volume/competitor density); for niche rather than full category (use filter_niches).
 Returns: data.json[0].data.{ pageIndex, maxPage, nextPage, categoryName, pagination, results[{ asin, title, price, star, rating, rank, img }] } — 24 rows/page. **Pagination**: use the 'page' param (default 1, 1-based); 'nextPage' holds the next page number, 'nextPage=null' or 'page>=maxPage' means last page reached.
 Pair with: ↑ nodeId from search_categories (keyword→category) or get_category_children (tree drilldown); ↓ asin into get_amazon_product; same categoryId can also feed filter_categories for aggregate metrics.
 Cost: ~1 point/page, ~5s. **Only paginate when the user explicitly asks for more / all results** — otherwise the first page is enough.`,

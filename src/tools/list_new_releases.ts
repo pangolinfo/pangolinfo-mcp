@@ -58,13 +58,13 @@ const inputSchema = z.object({
 export const listNewReleases: Tool<typeof inputSchema> = {
   name: "list_new_releases",
   description: t({
-    zh: `[Amazon 新品榜] 拉某类目的 New Releases——上市 30 天内卖得最好的 ASIN。
+    zh: `[Amazon 新品榜] 拉某类目的 New Releases——上市 30 天内卖得最好的 Top-50 ASIN(后端硬上限,不返 100 条)。
 Use when: 用户说"X 类目新品""有没有黑马新品""最近上架卖得好的""趋势新品方向""新进竞品"；GTM 选品里捕捉新切入角度；竞品雷达里发现新进入者。
 Don't use: 看长青款（用 list_bestsellers）；看类目全部商品（用 list_category_products）；只知道关键词不知道类目（先 search_categories）。
 Returns: data.json[0].data.{ reftag='zg_bsnr_g_<slug>', recsList } — recsList 是字符串形式的 JSON 数组，需二次 parse；每条 { id, metadataMap.{ render.zg.rank, ... } }。
 Pair with: ↑ categorySlug 同 list_bestsellers；↓ 把 id (ASIN) 喂 get_amazon_product 看为什么能上新品榜（卖点、价格、变体策略）。
 Cost: ~1 积点/次, ~5s。`,
-    en: `[Amazon New Releases] Best-selling ASINs that hit the market within the last 30 days for a category.
+    en: `[Amazon New Releases] Best-selling Top-50 ASINs that hit the market within the last 30 days for a category (backend cap; not 100).
 Use when: user says "new arrivals in X" / "any breakout new products" / "newly-launched that sell well" / "trending new directions" / "new entrants to monitor"; GTM scouting for new angles; competitor radar catching new entrants.
 Don't use: for evergreen winners (use list_bestsellers); for full category listings (use list_category_products); when you only have a keyword (use search_categories first).
 Returns: data.json[0].data.{ reftag='zg_bsnr_g_<slug>', recsList } — recsList is a JSON-string array (parse twice); each row { id, metadataMap.{ render.zg.rank, ... } }.
