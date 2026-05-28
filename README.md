@@ -11,7 +11,7 @@ Plug your favorite AI client (Claude Code, Cursor, Cline, Windsurf, Codex, Herme
 | **Transport** | stdio (MCP standard) |
 | **Runtime** | Node.js 18+ |
 | **License** | MIT |
-| **Get an API key** | <https://extapi.pangolinfo.com> |
+| **Get an API key** | <https://tool.pangolinfo.com/> |
 
 ---
 
@@ -69,7 +69,7 @@ Then wire it into your AI client — see the per-client snippets below. Point `a
 
 ## Get an API key
 
-1. Sign up at <https://extapi.pangolinfo.com>
+1. Sign up at <https://tool.pangolinfo.com/>
 2. Copy your `pgl_xxxxxxxx` key from the dashboard
 3. Top up credits if needed (each Amazon scrape call costs 0.75 credits; `pangolinfo_capabilities` is free)
 
@@ -301,7 +301,7 @@ src/
 
 We take operator and user safety seriously. By design, this MCP server:
 
-- **Brings your own key.** Authentication is via your personal `PANGOLINFO_API_KEY` (issued at <https://extapi.pangolinfo.com>). The key is read locally from your AI client's config or environment — it is never transmitted anywhere except to `https://scrapeapi.pangolinfo.com` (or `https://mcp.pangolinfo.com` for the hosted variant) over TLS 1.2+.
+- **Brings your own key.** Authentication is via your personal `PANGOLINFO_API_KEY` (issued at <https://tool.pangolinfo.com/>). The key is read locally from your AI client's config or environment — it is never transmitted anywhere except to `https://scrapeapi.pangolinfo.com` (or `https://mcp.pangolinfo.com` for the hosted variant) over TLS 1.2+.
 - **No telemetry.** This server does not phone home, does not collect usage analytics, and does not log your prompts. The only outbound traffic is the actual Amazon / Google / WIPO scrape API calls you explicitly invoke through tools.
 - **No PII collection.** No user account info, no email, no IP geolocation, and no prompt content is persisted by this server. Tool calls forward only the parameters you (or the AI agent) supplied.
 - **Read-only.** Every tool is a strictly read-only data lookup. None of them can write to Amazon, place orders, post reviews, modify listings, or take any side-effecting action on third-party platforms.
