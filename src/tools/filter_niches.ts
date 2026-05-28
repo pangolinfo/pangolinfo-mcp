@@ -141,19 +141,19 @@ export const filterNiches: Tool<typeof inputSchema> = {
   name: "filter_niches",
   description: t({
     zh: `[Amazon 利基筛选] 按 50+ 维指标筛选 Amazon Niche（比类目更细的"消费需求簇"），或当作"niche 详情"接口取单个 niche 完整深度报告。
-Use when: 用户说"找蓝海""高搜索量低竞争的利基""增长快的小众市场""niche 选品""为这个 niche 出详细报告"；GTM 选品 SOP 的核心筛选步骤；要某个 niche 的费用结构 / 品牌年龄 / 新品上架趋势等深度指标。
+Use when: 用户说"找蓝海""高搜索量低竞争的利基""增长快的小众市场""niche 选品""为这个 niche 出详细报告""退货率低的利基""退货率 < 10% 的市场"；GTM 选品 SOP 的核心筛选步骤；要某个 niche 的费用结构 / 品牌年龄 / 新品上架趋势等深度指标。
 Don't use: 想筛整类目（用 filter_categories）；想看 niche 下的具体商品（用 list_category_products 配合 categoryId，niche 自带的样品 ASIN 只有 1 个 referenceAsin）；只想要广义关键词搜索（用 search_amazon）。
 Returns: data.items.data[{ nicheId, nicheTitle, referenceAsinImageUrl, currency, searchVolumeT90, searchVolumeT360, searchVolumeGrowthT90, minimumPrice, maximumPrice, avgPrice, productCount, sponsoredProductsPercentage, primeProductsPercentage, top5ProductsClickShare, top20BrandsClickShare, brandCount, sellingPartnerCount, avgBrandAge, avgBestSellerRank, avgProductPrice, avgReviewCount, avgReviewRating, avgDetailPageQuality, newProductsLaunchedT180/T360, successfulLaunchesT90/T180/T360, returnRateT360, 各项费用 T365 ... 100+ 字段 }] + data.items.pagination.{ total, page, size, hasNext }。**翻页**: 用 page 参数（默认 1，从 1 开始，size 上限 10）；pagination.hasNext=true 表示还有下一页，hasNext=false 表示已到底。
 Pair with: ↑ 必填 marketplaceId（默认 US）；nicheTitle 关键词过滤，nicheId 单 niche 详情；↓ 拿到 referenceAsin 后喂 get_amazon_product 看代表品；niche 不直接关联 categoryId，需要二次推断。
 Cost: ~1 积点/次, ~5s。
-Tips: size 上限 10；50+ 长尾筛选字段走 extraFilters 透传；典型蓝海过滤组合 = searchVolumeT90Min 高 + top5ProductsClickShareT360Max 低 + productCountMax 中 + searchVolumeGrowthT90Min > 0。`,
+Tips: size 上限 10；50+ 长尾筛选字段走 extraFilters 透传；典型蓝海过滤组合 = searchVolumeT90Min 高 + top5ProductsClickShareT360Max 低 + productCountMax 中 + searchVolumeGrowthT90Min > 0 + returnRateT360Max ≤ 0.10（低退货）。退货率筛选用 returnRateT360Max（上限，0-1 小数），返回里 returnRateT360 字段直接给出具体退货率。`,
     en: `[Amazon niche filter] Filter Amazon Niches (a finer-grained "demand cluster" than categories) by 50+ commercial metrics, or use as a "niche detail" endpoint for one niche.
-Use when: user says "find blue ocean" / "high search volume + low competition niches" / "fast-growing small markets" / "niche scouting" / "give me the deep report on this niche"; the core filter step of GTM scouting SOPs; getting fee structure / brand age / new-launch trends for one niche.
+Use when: user says "find blue ocean" / "high search volume + low competition niches" / "fast-growing small markets" / "niche scouting" / "give me the deep report on this niche" / "low return-rate niches" / "niches with return rate under 10%"; the core filter step of GTM scouting SOPs; getting fee structure / brand age / new-launch trends for one niche.
 Don't use: for full categories (use filter_categories); for actual products in a niche (the niche record only carries 1 referenceAsin; combine with categoryId + list_category_products); for plain keyword search (use search_amazon).
 Returns: data.items.data[{ nicheId, nicheTitle, referenceAsinImageUrl, currency, searchVolumeT90, searchVolumeT360, searchVolumeGrowthT90, minimumPrice, maximumPrice, avgPrice, productCount, sponsoredProductsPercentage, primeProductsPercentage, top5ProductsClickShare, top20BrandsClickShare, brandCount, sellingPartnerCount, avgBrandAge, avgBestSellerRank, avgProductPrice, avgReviewCount, avgReviewRating, avgDetailPageQuality, newProductsLaunchedT180/T360, successfulLaunchesT90/T180/T360, returnRateT360, fee fields T365 … 100+ fields }] + data.items.pagination.{ total, page, size, hasNext }. **Pagination**: use the 'page' param (default 1, 1-based, size capped at 10); 'pagination.hasNext=true' means more pages exist, 'hasNext=false' means last page.
 Pair with: ↑ marketplaceId required (defaults US); nicheTitle for keyword filter, nicheId for single-niche detail; ↓ feed referenceAsin into get_amazon_product to see the representative product; niche doesn't carry a categoryId directly — derive separately if needed.
 Cost: ~1 point/call, ~5s.
-Tips: size capped at 10; pass long-tail filters (50+ fields) via extraFilters; classic blue-ocean combo = high searchVolumeT90Min + low top5ProductsClickShareT360Max + moderate productCountMax + positive searchVolumeGrowthT90Min.`,
+Tips: size capped at 10; pass long-tail filters (50+ fields) via extraFilters; classic blue-ocean combo = high searchVolumeT90Min + low top5ProductsClickShareT360Max + moderate productCountMax + positive searchVolumeGrowthT90Min + returnRateT360Max ≤ 0.10 (low-return). For return-rate filtering use returnRateT360Max (upper bound, 0-1 decimal); the response includes returnRateT360 with the actual return rate.`,
   }),
   inputSchema,
   async execute(input, ctx) {
