@@ -297,6 +297,22 @@ src/
 
 ---
 
+## Security & Data Handling
+
+We take operator and user safety seriously. By design, this MCP server:
+
+- **Brings your own key.** Authentication is via your personal `PANGOLINFO_API_KEY` (issued at <https://extapi.pangolinfo.com>). The key is read locally from your AI client's config or environment — it is never transmitted anywhere except to `https://scrapeapi.pangolinfo.com` (or `https://mcp.pangolinfo.com` for the hosted variant) over TLS 1.2+.
+- **No telemetry.** This server does not phone home, does not collect usage analytics, and does not log your prompts. The only outbound traffic is the actual Amazon / Google / WIPO scrape API calls you explicitly invoke through tools.
+- **No PII collection.** No user account info, no email, no IP geolocation, and no prompt content is persisted by this server. Tool calls forward only the parameters you (or the AI agent) supplied.
+- **Read-only.** Every tool is a strictly read-only data lookup. None of them can write to Amazon, place orders, post reviews, modify listings, or take any side-effecting action on third-party platforms.
+- **HTTPS-only transport.** Both the stdio variant (local) and the hosted variant (`https://mcp.pangolinfo.com/mcp`) require HTTPS; HTTP requests are refused.
+- **Open source.** The full source is in this repository under MIT license — anyone can audit what the server sends and where.
+- **Responsible use.** Pangolinfo APIs aggregate public e-commerce data. You are responsible for using the returned data in compliance with the terms of service of the underlying platforms (Amazon, Google, etc.) and with applicable laws in your jurisdiction.
+
+Report security issues privately to <security@pangolinfo.com> — please do not file public GitHub issues for vulnerabilities.
+
+---
+
 ## Support
 
 - **API docs**: <https://docs.pangolinfo.com>
