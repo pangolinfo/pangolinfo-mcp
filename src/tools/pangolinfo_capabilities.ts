@@ -166,7 +166,7 @@ const TOOL_META: ToolMeta[] = [
     },
   },
   {
-    name: "google_ai_search",
+    name: "ai_search",
     cost: "2pt/~30s",
     domain: "google",
     oneLiner: {
@@ -175,7 +175,7 @@ const TOOL_META: ToolMeta[] = [
     },
   },
   {
-    name: "google_trends",
+    name: "keyword_trends",
     cost: "1.5pt/~5s",
     domain: "google",
     oneLiner: {
@@ -227,7 +227,7 @@ const WORKFLOWS = [
   },
   {
     title: { zh: "📈 类目趋势监测", en: "📈 Category trend monitoring" },
-    steps: ["list_bestsellers", "list_new_releases", "google_trends"],
+    steps: ["list_bestsellers", "list_new_releases", "keyword_trends"],
     note: {
       zh: "Best Sellers 看长青、New Releases 看新进、Google Trends 看外部需求方向。",
       en: "Best Sellers for evergreen winners, New Releases for new entrants, Google Trends for external demand direction.",
@@ -235,7 +235,7 @@ const WORKFLOWS = [
   },
   {
     title: { zh: "🌐 外部需求验证", en: "🌐 External demand validation" },
-    steps: ["google_trends", "google_ai_search (mode='overview')"],
+    steps: ["keyword_trends", "ai_search (mode='overview')"],
     note: {
       zh: "对一个 keyword 概念，先 trends 看热度走势，再 ai_search 看 AI Overview 引用了哪些信息源（识别内容竞争）。",
       en: "For a keyword concept, run trends for popularity trajectory, then ai_search to see which sources the AI Overview cites (content competition signal).",

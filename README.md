@@ -2,11 +2,20 @@
 
 > Pangolinfo MCP server — **18 Amazon e-commerce data tools (1 deprecated)** for AI assistants via [Model Context Protocol](https://modelcontextprotocol.io).
 
-Plug your favorite AI client (Claude Code, Cursor, Cline, Windsurf, Codex, Hermes, OpenClaw) into Pangolinfo's Amazon scrape APIs and let the AI run keyword research, listing analysis, review mining, niche discovery, category navigation, Google AI Search lookups, Google Trends checks, and WIPO trademark clearance — all from natural-language instructions.
+Plug your favorite AI client (Claude Code, Cursor, Cline, Windsurf, Codex, Hermes, OpenClaw) into Pangolinfo's Amazon scrape APIs and let the AI run keyword research, listing analysis, review mining, niche discovery, category navigation, AI search lookups, keyword-trend checks, and WIPO trademark clearance — all from natural-language instructions.
+
+> ⚠️ **BREAKING CHANGE in 0.3.0 — tool renames (no backward-compatible aliases)**
+>
+> | Old name (≤ 0.2.x) | New name (0.3.0+) |
+> | --- | --- |
+> | `google_ai_search` | `ai_search` |
+> | `google_trends` | `keyword_trends` |
+>
+> Tool names changed to remove third-party brand references from the public MCP interface. Any prompts, SKILLs, or scripts pinning the old names will get `ToolNotFound` after upgrading. Update your prompts to the new names. Tool parameters, return shape, and pricing are unchanged.
 
 | | |
 |---|---|
-| **Version** | `0.2.1` |
+| **Version** | `0.3.0` |
 | **Tools** | 18 (17 backend + 1 self-introspection; 1 deprecated) |
 | **Transport** | stdio (MCP standard) |
 | **Runtime** | Node.js 18+ |
@@ -200,8 +209,8 @@ See [`MCP-TOOLS-MAP.md`](./MCP-TOOLS-MAP.md) for the full coordination graph (wh
 | 12 | `get_category_paths` | Resolve full ancestor paths for a category node | 0.75 |
 | 13 | `search_local_maps` | Google Maps local business search | 0.75 |
 | 14 | `wipo_search` | WIPO global trademark search (IP clearance) | 0.75 |
-| 15 | `google_ai_search` | Google AI Overview / SGE answer for a query | 0.75 |
-| 16 | `google_trends` | Google Trends interest-over-time | 0.75 |
+| 15 | `ai_search` | AI Search via Google SERP (AI Overview + organic, with compliance disclaimer) | 0.75 |
+| 16 | `keyword_trends` | Keyword Trends via Google Trends (with compliance disclaimer) | 0.75 |
 | 17 | `pangolinfo_capabilities` | Self-introspection — what tools exist, how they chain | **0** (local) |
 
 Default marketplace is **Amazon US** (`marketplaceId=ATVPDKIKX0DER`, `zip=90001`). Override per call via tool arguments.

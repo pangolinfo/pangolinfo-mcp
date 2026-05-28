@@ -22,8 +22,8 @@ import { filterNiches } from "./filter_niches.js";
 import { getCategoryPaths } from "./get_category_paths.js";
 import { searchLocalMaps } from "./search_local_maps.js";
 import { wipoSearch } from "./wipo_search.js";
-import { googleAiSearch } from "./google_ai_search.js";
-import { googleTrends } from "./google_trends.js";
+import { aiSearch } from "./ai_search.js";
+import { keywordTrends } from "./keyword_trends.js";
 import { searchAmazonAlexa } from "./search_amazon_alexa.js";
 import { pangolinfoCapabilities } from "./pangolinfo_capabilities.js";
 
@@ -47,7 +47,7 @@ export const tools: Tool[] = [
   getCategoryPaths,
   searchLocalMaps,
   wipoSearch,
-  googleAiSearch,
-  googleTrends,
+  aiSearch,
+  keywordTrends,
   searchAmazonAlexa,
 ];

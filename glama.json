@@ -74,8 +74,8 @@
     "get_category_paths",
     "filter_categories",
     "filter_niches",
-    "google_ai_search",
-    "google_trends",
+    "ai_search",
+    "keyword_trends",
     "search_local_maps",
     "wipo_search",
     "pangolinfo_capabilities"

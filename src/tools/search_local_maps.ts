@@ -83,16 +83,16 @@ const inputSchema = z.object({
 export const searchLocalMaps: Tool<typeof inputSchema> = {
   name: "search_local_maps",
   description: t({
-    zh: `[Google Maps 本地商家搜索] 在指定经纬度范围搜本地商家，返回名称/地址/评分/评论数等。
+    zh: `[Local Maps via Google Maps] 本地商家搜索(数据来源:Google Maps,使用须遵守 Google 服务条款)。在指定经纬度范围搜本地商家，返回名称/地址/评分/评论数等。
 Use when: 用户说"X 城市的 Y 商家""本地零售调研""线下渠道分布""某区域的咖啡店/超市/批发商""品牌实体店覆盖密度"；做线下竞品/渠道调研；判断某品类在某地区的实体供给密度。
-Don't use: 想要电商商品（用 Amazon 系列）；想要全球趋势（用 google_trends）；想要 Google 搜索结果（用 google_ai_search）。
+Don't use: 想要电商商品（用 Amazon 系列）；想要全球趋势（用 keyword_trends）；想要 Google 搜索结果（用 ai_search）。
 Returns: data.organicResults[{ place_id, name, about, rating, number_of_reviews, borough, street_addr, city, postal_code, ... }]。
 Pair with: ↑ query (商家关键词) + latitude/longitude/zoom 定位（zoom 1=世界, 13=城市, 21=单栋建筑）；↓ 主要给人看分布，下游通常不接其他 tool。
 Cost: ~1.5 积点/次, ~5s。
 Tips: zoom 默认 13（城市级别）就能拿到一片商家；缩到 17+ 才聚焦到一条街。`,
-    en: `[Google Maps local-business search] Search local businesses at a given lat/lng — returns name, address, rating, review count, etc.
+    en: `[Local Maps via Google Maps] Local-business search (data source: Google Maps; use must comply with Google Terms of Service). Search local businesses at a given lat/lng — returns name, address, rating, review count, etc.
 Use when: user says "Y businesses in city X" / "local retail research" / "offline channel distribution" / "coffee shops/supermarkets/wholesalers in area" / "physical-store coverage density"; offline competitor/channel research; gauging physical-supply density of a category in a region.
-Don't use: for e-commerce listings (Amazon series); for global trends (use google_trends); for Google search results (use google_ai_search).
+Don't use: for e-commerce listings (Amazon series); for global trends (use keyword_trends); for Google search results (use ai_search).
 Returns: data.organicResults[{ place_id, name, about, rating, number_of_reviews, borough, street_addr, city, postal_code, ... }].
 Pair with: ↑ query (business keyword) + latitude/longitude/zoom (zoom 1=world, 13=city, 21=single building); ↓ presentation-focused, downstream rarely consumes.
 Cost: ~1.5 points/call, ~5s.

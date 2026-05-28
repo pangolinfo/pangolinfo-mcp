@@ -97,15 +97,15 @@ export const searchAmazon: Tool<typeof inputSchema> = {
   description: t({
     zh: `[Amazon SERP 抓取] 用关键词在 Amazon 上跑一次真实搜索，拿回搜索结果首屏 ASIN 列表。
 Use when: 用户说"在 Amazon 上搜 X""谁在卖 X""X 关键词下排名前几""做 X 的竞品有哪些"；或要拿到某个关键词的搜索结果页 ASIN 列表作为下游分析输入。
-Don't use: 想拿单个 ASIN 的详情（用 get_amazon_product）；想要类目热销榜（用 list_bestsellers）；想看 Google/外部对该词的需求（用 google_ai_search 或 google_trends）。
+Don't use: 想拿单个 ASIN 的详情（用 get_amazon_product）；想要类目热销榜（用 list_bestsellers）；想看 Google/外部对该词的需求（用 ai_search 或 keyword_trends）。
 Returns (format='json', 默认): data.json[0].data.{ pageIndex, nextPage, keyword, results[{ asin, title, price, star, rating, sales, badge, rank, sponsored, image, delivery }] } — 约 22 行/页。**翻页**: 用 page 参数（默认 1，从 1 开始）；响应里 nextPage 给下一页页码，nextPage=null 表示到底。
-Pair with: ↓ 把 results[].asin 喂给 get_amazon_product / get_amazon_reviews 做单品深拆；↓ 同一 keyword 喂给 google_trends 做"内部搜索热度 vs 外部 Google 热度"对比。
+Pair with: ↓ 把 results[].asin 喂给 get_amazon_product / get_amazon_reviews 做单品深拆；↓ 同一 keyword 喂给 keyword_trends 做"内部搜索热度 vs 外部 Google 热度"对比。
 Cost: ~1 积点/页, ~5s。**翻页只在用户明确要"更多/Top-N(N>22)/全部"时才做**，否则首页够用。`,
     en: `[Amazon SERP scrape] Run a real Amazon keyword search and return the first-page ASIN list.
 Use when: user says "search Amazon for X" / "who sells X" / "top results for keyword X" / "competitors for X"; or you need a list of ASINs for a keyword as upstream input to deeper analysis.
-Don't use: for a single ASIN detail (use get_amazon_product); for category bestseller ranks (use list_bestsellers); for Google/external demand on the term (use google_ai_search or google_trends).
+Don't use: for a single ASIN detail (use get_amazon_product); for category bestseller ranks (use list_bestsellers); for Google/external demand on the term (use ai_search or keyword_trends).
 Returns (format='json', default): data.json[0].data.{ pageIndex, nextPage, keyword, results[{ asin, title, price, star, rating, sales, badge, rank, sponsored, image, delivery }] } — ~22 rows/page. **Pagination**: use the 'page' param (default 1, 1-based); response's 'nextPage' holds the next page number, 'nextPage=null' means last page reached.
-Pair with: ↓ feed results[].asin into get_amazon_product / get_amazon_reviews for single-product deep-dive; ↓ feed the same keyword into google_trends to compare in-site vs external demand.
+Pair with: ↓ feed results[].asin into get_amazon_product / get_amazon_reviews for single-product deep-dive; ↓ feed the same keyword into keyword_trends to compare in-site vs external demand.
 Cost: ~1 point/page, ~5s. **Only paginate when the user explicitly asks for more / Top-N (N>22) / all results** — otherwise the first page is enough.`,
   }),
   inputSchema,
