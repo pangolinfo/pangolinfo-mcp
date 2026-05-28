@@ -2,7 +2,7 @@
   "$schema": "https://glama.ai/mcp/schemas/server.json",
   "name": "pangolinfo-mcp",
   "displayName": "Pangolinfo — Amazon Market Intelligence",
-  "description": "17 Amazon e-commerce data tools for AI assistants: keyword search, product PDP, review mining, niche discovery, category navigation, Google AI Search, Google Trends, and WIPO trademark/patent clearance. Bring your own Pangolinfo API key.",
+  "description": "Real-time Amazon market intelligence for AI assistants — 18 tools covering SERP scraping with sponsored-ad positions, product PDP & variants, critical-review mining, Best Sellers and New Releases ranks, seller storefronts, niche discovery with size × competition × growth filters, full category-tree navigation, plus Google AI Search, Google Trends, local Maps, and WIPO trademark / design-patent clearance. Bring your own Pangolinfo API key (60 free credits for new users).",
   "vendor": "Pangolinfo",
   "homepage": "https://www.pangolinfo.com",
   "sourceUrl": "https://github.com/pangolinfo/pangolinfo-mcp",
@@ -32,7 +32,9 @@
   "installation": {
     "stdio": {
       "command": "node",
-      "args": ["dist/server.mjs"],
+      "args": [
+        "dist/server.mjs"
+      ],
       "env": {
         "PANGOLINFO_API_KEY": "${PANGOLINFO_API_KEY}",
         "PANGOLINFO_LANG": "en"
