@@ -1,0 +1,98 @@
+{
+  "$schema": "https://glama.ai/mcp/schemas/server.json",
+  "name": "pangolinfo-mcp",
+  "displayName": "Pangolinfo — Amazon Market Intelligence",
+  "description": "17 Amazon e-commerce data tools for AI assistants: keyword search, product PDP, review mining, niche discovery, category navigation, Google AI Search, Google Trends, and WIPO trademark/patent clearance. Bring your own Pangolinfo API key.",
+  "vendor": "Pangolinfo",
+  "homepage": "https://www.pangolinfo.com",
+  "sourceUrl": "https://github.com/pangolinfo/pangolinfo-mcp",
+  "license": "MIT",
+  "runtime": {
+    "type": "node",
+    "minVersion": "18"
+  },
+  "tags": [
+    "amazon",
+    "e-commerce",
+    "product-research",
+    "keyword-research",
+    "review-mining",
+    "niche-discovery",
+    "google-trends",
+    "google-ai-search",
+    "wipo",
+    "trademark",
+    "market-intelligence"
+  ],
+  "categories": [
+    "search",
+    "data",
+    "e-commerce"
+  ],
+  "installation": {
+    "stdio": {
+      "command": "node",
+      "args": ["dist/server.mjs"],
+      "env": {
+        "PANGOLINFO_API_KEY": "${PANGOLINFO_API_KEY}",
+        "PANGOLINFO_LANG": "en"
+      }
+    },
+    "remote": {
+      "transport": "streamable-http",
+      "url": "https://mcp.pangolinfo.com/mcp?api_key=${PANGOLINFO_API_KEY}"
+    }
+  },
+  "environment": [
+    {
+      "name": "PANGOLINFO_API_KEY",
+      "description": "Personal Pangolinfo API key (format pgl_xxxxxxxx). Get one at https://extapi.pangolinfo.com — new users receive 60 free credits.",
+      "required": true,
+      "secret": true
+    },
+    {
+      "name": "PANGOLINFO_LANG",
+      "description": "Tool description and error hint language. Accepts 'zh' (default) or 'en'.",
+      "required": false,
+      "secret": false,
+      "default": "zh"
+    }
+  ],
+  "tools": [
+    "search_amazon",
+    "get_amazon_product",
+    "get_amazon_reviews",
+    "list_bestsellers",
+    "list_new_releases",
+    "list_category_products",
+    "list_seller_products",
+    "search_amazon_alexa",
+    "search_categories",
+    "get_category_children",
+    "get_category_paths",
+    "filter_categories",
+    "filter_niches",
+    "google_ai_search",
+    "google_trends",
+    "search_local_maps",
+    "wipo_search",
+    "pangolinfo_capabilities"
+  ],
+  "security": {
+    "authentication": "api-key",
+    "dataHandling": "no-telemetry,no-pii-collection,https-only,read-only",
+    "transport": "https"
+  },
+  "maintainers": [
+    {
+      "name": "Pangolinfo",
+      "url": "https://github.com/pangolinfo",
+      "email": "support@pangolinfo.com"
+    }
+  ],
+  "support": {
+    "issues": "https://github.com/pangolinfo/pangolinfo-mcp/issues",
+    "email": "support@pangolinfo.com",
+    "docs": "https://docs.pangolinfo.com"
+  }
+}
