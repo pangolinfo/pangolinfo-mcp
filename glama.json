@@ -46,7 +46,7 @@
   "environment": [
     {
       "name": "PANGOLINFO_API_KEY",
-      "description": "Personal Pangolinfo API key (format pgl_xxxxxxxx). Get one at https://extapi.pangolinfo.com — new users receive 60 free credits.",
+      "description": "Personal Pangolinfo API key (format pgl_xxxxxxxx). Get one at https://tool.pangolinfo.com/ — new users receive 60 free credits.",
       "required": true,
       "secret": true
     },
