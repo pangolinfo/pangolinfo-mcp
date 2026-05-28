@@ -1,13 +1,13 @@
 # pangolinfo-mcp
 
-> Pangolinfo MCP server — **17 Amazon e-commerce data tools** for AI assistants via [Model Context Protocol](https://modelcontextprotocol.io).
+> Pangolinfo MCP server — **18 Amazon e-commerce data tools (1 deprecated)** for AI assistants via [Model Context Protocol](https://modelcontextprotocol.io).
 
 Plug your favorite AI client (Claude Code, Cursor, Cline, Windsurf, Codex, Hermes, OpenClaw) into Pangolinfo's Amazon scrape APIs and let the AI run keyword research, listing analysis, review mining, niche discovery, category navigation, Google AI Search lookups, Google Trends checks, and WIPO trademark clearance — all from natural-language instructions.
 
 | | |
 |---|---|
 | **Version** | `0.2.1` |
-| **Tools** | 17 (16 backend + 1 self-introspection) |
+| **Tools** | 18 (17 backend + 1 self-introspection; 1 deprecated) |
 | **Transport** | stdio (MCP standard) |
 | **Runtime** | Node.js 18+ |
 | **License** | MIT |
@@ -180,7 +180,7 @@ mcp_servers:
 
 ---
 
-## Tools (17)
+## Tools (18 — 1 deprecated)
 
 See [`MCP-TOOLS-MAP.md`](./MCP-TOOLS-MAP.md) for the full coordination graph (which tools chain into which).
 
@@ -249,7 +249,7 @@ After restarting your AI client, ask it:
 
 > List all available `pangolinfo` MCP tools.
 
-You should see 17 tools. Then try:
+You should see 18 tools (one of them, `search_amazon_alexa`, is marked DEPRECATED). Then try:
 
 > Use `pangolinfo_capabilities` with mode "summary".
 
@@ -283,7 +283,7 @@ src/
 ├── i18n.ts             zh/en translation lookup
 └── tools/
     ├── _types.ts             Tool / ToolContext type definitions
-    ├── index.ts              Tool registry (17 tools)
+    ├── index.ts              Tool registry (18 tools)
     └── <verb_noun>.ts        One file per tool
 ```
 
