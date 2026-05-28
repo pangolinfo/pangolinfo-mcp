@@ -86,6 +86,7 @@
     "transport": "https"
   },
   "maintainers": [
+    "pangolinfo",
     {
       "name": "Pangolinfo",
       "url": "https://github.com/pangolinfo",
