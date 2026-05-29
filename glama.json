@@ -1,8 +1,8 @@
 {
   "$schema": "https://glama.ai/mcp/schemas/server.json",
-  "name": "pangolinfo-mcp",
-  "displayName": "Pangolinfo — Amazon Market Intelligence",
-  "description": "Real-time Amazon market intelligence for AI assistants — 18 tools covering SERP scraping with sponsored-ad positions, product PDP & variants, critical-review mining, Best Sellers and New Releases ranks, seller storefronts, niche discovery with size × competition × growth filters, full category-tree navigation, plus Google AI Search, Google Trends, local Maps, and WIPO trademark / design-patent clearance. Bring your own Pangolinfo API key (60 free credits for new users).",
+  "name": "amazon-all-in-one-scrape-mcp",
+  "displayName": "Amazon All-in-One Scrape MCP — by Pangolinfo",
+  "description": "Comprehensive Amazon MCP server providing real-time data for products, rankings, bestsellers, sellers, ads, and reviews. Delivers clean, geo-targeted JSON/Markdown output tailored for autonomous AI Agents.",
   "vendor": "Pangolinfo",
   "homepage": "https://www.pangolinfo.com",
   "sourceUrl": "https://github.com/pangolinfo/pangolinfo-mcp",
