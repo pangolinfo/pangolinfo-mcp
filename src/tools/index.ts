@@ -22,13 +22,14 @@ import { filterNiches } from "./filter_niches.js";
 import { getCategoryPaths } from "./get_category_paths.js";
 import { searchLocalMaps } from "./search_local_maps.js";
 import { wipoSearch } from "./wipo_search.js";
+import { pacerSearch } from "./pacer_search.js";
 import { aiSearch } from "./ai_search.js";
 import { keywordTrends } from "./keyword_trends.js";
 import { searchAmazonAlexa } from "./search_amazon_alexa.js";
 import { pangolinfoCapabilities } from "./pangolinfo_capabilities.js";
 
 /**
- * v0.3.0 真实可用 = 18 个 tool（17 业务 + 1 自省 pangolinfo_capabilities）。
+ * v0.4.0 真实可用 = 19 个 tool（18 业务 + 1 自省 pangolinfo_capabilities）。
  * pangolinfo_capabilities 放在第一位 — 这是 AI 第一次接入时建议先调的自省接口。
  */
 export const tools: Tool[] = [
@@ -47,6 +48,7 @@ export const tools: Tool[] = [
   getCategoryPaths,
   searchLocalMaps,
   wipoSearch,
+  pacerSearch,
   aiSearch,
   keywordTrends,
   searchAmazonAlexa,

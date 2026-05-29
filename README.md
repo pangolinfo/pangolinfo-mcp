@@ -1,6 +1,6 @@
 # pangolinfo-mcp
 
-> Pangolinfo MCP server — **18 Amazon e-commerce data tools (1 deprecated)** for AI assistants via [Model Context Protocol](https://modelcontextprotocol.io).
+> Pangolinfo MCP server — **19 Amazon e-commerce & IP data tools (1 deprecated)** for AI assistants via [Model Context Protocol](https://modelcontextprotocol.io).
 
 Plug your favorite AI client (Claude Code, Cursor, Cline, Windsurf, Codex, Hermes, OpenClaw) into Pangolinfo's Amazon scrape APIs and let the AI run keyword research, listing analysis, review mining, niche discovery, category navigation, AI search lookups, keyword-trend checks, and WIPO trademark clearance — all from natural-language instructions.
 
@@ -15,8 +15,8 @@ Plug your favorite AI client (Claude Code, Cursor, Cline, Windsurf, Codex, Herme
 
 | | |
 |---|---|
-| **Version** | `0.3.0` |
-| **Tools** | 18 (17 backend + 1 self-introspection; 1 deprecated) |
+| **Version** | `0.4.0` |
+| **Tools** | 19 (18 backend + 1 self-introspection; 1 deprecated) |
 | **Transport** | stdio (MCP standard) |
 | **Runtime** | Node.js 18+ |
 | **License** | MIT |
@@ -189,7 +189,7 @@ mcp_servers:
 
 ---
 
-## Tools (18 — 1 deprecated)
+## Tools (19 — 1 deprecated)
 
 See [`MCP-TOOLS-MAP.md`](./MCP-TOOLS-MAP.md) for the full coordination graph (which tools chain into which).
 
@@ -208,10 +208,11 @@ See [`MCP-TOOLS-MAP.md`](./MCP-TOOLS-MAP.md) for the full coordination graph (wh
 | 11 | `filter_niches` | Niche discovery (size × competition × growth) | 0.75 |
 | 12 | `get_category_paths` | Resolve full ancestor paths for a category node | 0.75 |
 | 13 | `search_local_maps` | Google Maps local business search | 0.75 |
-| 14 | `wipo_search` | WIPO global trademark search (IP clearance) | 0.75 |
-| 15 | `ai_search` | AI Search via Google SERP (AI Overview + organic, with compliance disclaimer) | 0.75 |
-| 16 | `keyword_trends` | Keyword Trends via Google Trends (with compliance disclaimer) | 0.75 |
-| 17 | `pangolinfo_capabilities` | Self-introspection — what tools exist, how they chain | **0** (local) |
+| 14 | `wipo_search` | WIPO global design / trademark search (IP clearance) | 2 |
+| 15 | `pacer_search` | US patent-litigation (PACER) case + docket timeline search | 5 |
+| 16 | `ai_search` | AI Search via Google SERP (AI Overview + organic, with compliance disclaimer) | 2 |
+| 17 | `keyword_trends` | Keyword Trends via Google Trends (with compliance disclaimer) | 1.5 |
+| 18 | `pangolinfo_capabilities` | Self-introspection — what tools exist, how they chain | **0** (local) |
 
 Default marketplace is **Amazon US** (`marketplaceId=ATVPDKIKX0DER`, `zip=90001`). Override per call via tool arguments.
 
@@ -258,7 +259,7 @@ After restarting your AI client, ask it:
 
 > List all available `pangolinfo` MCP tools.
 
-You should see 18 tools (one of them, `search_amazon_alexa`, is marked DEPRECATED). Then try:
+You should see 19 tools (one of them, `search_amazon_alexa`, is marked DEPRECATED). Then try:
 
 > Use `pangolinfo_capabilities` with mode "summary".
 
@@ -292,7 +293,7 @@ src/
 ├── i18n.ts             zh/en translation lookup
 └── tools/
     ├── _types.ts             Tool / ToolContext type definitions
-    ├── index.ts              Tool registry (18 tools)
+    ├── index.ts              Tool registry (19 tools)
     └── <verb_noun>.ts        One file per tool
 ```
 

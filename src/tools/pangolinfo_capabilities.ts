@@ -192,6 +192,15 @@ const TOOL_META: ToolMeta[] = [
       en: "WIPO global design / IP search",
     },
   },
+  {
+    name: "pacer_search",
+    cost: "5pt/~3s",
+    domain: "ip",
+    oneLiner: {
+      zh: "PACER 美国专利诉讼案件 + docket 流水检索",
+      en: "PACER US patent-litigation case + docket timeline search",
+    },
+  },
 ];
 
 
@@ -250,6 +259,17 @@ const WORKFLOWS = [
     note: {
       zh: "美国看 USPTO 外观（USID），中国看 CNID（必须配 rd/status/lcs 至少一项，否则全表扫描被拒）。",
       en: "USPTO designs via USID; China designs via CNID (pair with rd/status/lcs to avoid full-scan rejection).",
+    },
+  },
+  {
+    title: { zh: "⚖️ 专利侵权诉讼闭环（WIPO → PACER）", en: "⚖️ Patent-litigation loop (WIPO → PACER)" },
+    steps: [
+      "wipo_search (source='USID', prod='<product>')  // 找风险专利号",
+      "pacer_search (patentNumber='<from WIPO>')       // 定位对应美国诉讼 + docket 流水",
+    ],
+    note: {
+      zh: "先用 WIPO 找出新品涉及的风险专利号，再用 pacer_search 查这些专利在美国有没有被诉讼、案件进展、原被告，形成端到端 IP 风险闭环。pacer_search 也可直接按公司名 / 案件号查。",
+      en: "Use WIPO to surface risky patent numbers for a new product, then pacer_search to check whether those patents have been litigated in the US, the case status, and the parties — an end-to-end IP-risk loop. pacer_search also takes companyName / caseNumber directly.",
     },
   },
   {
