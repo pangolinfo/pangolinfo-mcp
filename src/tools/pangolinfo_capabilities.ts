@@ -194,7 +194,7 @@ const TOOL_META: ToolMeta[] = [
   },
   {
     name: "pacer_search",
-    cost: "5pt/~3s",
+    cost: "12pt/~3s",
     domain: "ip",
     oneLiner: {
       zh: "PACER 美国专利诉讼案件 + docket 流水检索",

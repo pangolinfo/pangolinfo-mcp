@@ -15,7 +15,7 @@ Plug your favorite AI client (Claude Code, Cursor, Cline, Windsurf, Codex, Herme
 
 | | |
 |---|---|
-| **Version** | `0.4.0` |
+| **Version** | `0.4.1` |
 | **Tools** | 19 (18 backend + 1 self-introspection; 1 deprecated) |
 | **Transport** | stdio (MCP standard) |
 | **Runtime** | Node.js 18+ |
@@ -209,7 +209,7 @@ See [`MCP-TOOLS-MAP.md`](./MCP-TOOLS-MAP.md) for the full coordination graph (wh
 | 12 | `get_category_paths` | Resolve full ancestor paths for a category node | 0.75 |
 | 13 | `search_local_maps` | Google Maps local business search | 0.75 |
 | 14 | `wipo_search` | WIPO global design / trademark search (IP clearance) | 2 |
-| 15 | `pacer_search` | US patent-litigation (PACER) case + docket timeline search | 5 |
+| 15 | `pacer_search` | US patent-litigation (PACER) case + docket timeline search | 12 |
 | 16 | `ai_search` | AI Search via Google SERP (AI Overview + organic, with compliance disclaimer) | 2 |
 | 17 | `keyword_trends` | Keyword Trends via Google Trends (with compliance disclaimer) | 1.5 |
 | 18 | `pangolinfo_capabilities` | Self-introspection — what tools exist, how they chain | **0** (local) |

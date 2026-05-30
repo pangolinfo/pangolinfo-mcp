@@ -7,18 +7,27 @@
  * returns the matching case docket(s) with docketNumber / caseName / court /
  * parties / patentNumbers / status / dateFiled + an inline `entries[]`
  * litigation event timeline (documentNumber / dateFiled / description /
- * pdfUrl). pointCost = 5.
+ * pdfUrl). pointCost = 12 (raised from 5 — backend ApiName price 2026-05-30).
  *
  * BACKEND CONTRACT:
  *   - At least ONE of patentNumber / companyName / caseNumber is required;
  *     when multiple are supplied they are combined with AND (intersection).
  *   - patentNumber: exact match (commas/spaces stripped, upper-cased server-side).
+ *     Also indexed across attachment-level patent numbers (an entry's
+ *     extraDocument[].patent_sumbers) — a patent that only appears on an
+ *     attachment will still match its case. (Backend-side enhancement; no tool
+ *     logic change needed.)
  *   - companyName: prefix match against party names (plaintiff/defendant).
  *   - caseNumber: exact match on the court docketNumber, e.g. "3:90-cv-00003".
  *   - size capped at 50 server-side; entrySize capped at 200 server-side.
  *   - 30s server timeout — narrow the query (add a precise patent/case number)
  *     if it times out.
  *   - Response envelope mirrors wipo_search: { data: { total, hits: [] } }.
+ *   - Each entry carries `extraDocument[]` — attachments hung off that docket
+ *     event. Usually [] (~0.014% of entries have attachments). Fields are
+ *     snake_case (unlike the camelCase entry itself): document_number (int),
+ *     document_href (string), pdf_url (string), patent_sumbers (string[];
+ *     yes, the upstream key is misspelled "sumbers").
  *
  * Pairs naturally with wipo_search: use wipo_search to surface infringement-risk
  * patent numbers, then pacer_search to locate the corresponding US lawsuits.
@@ -98,16 +107,16 @@ export const pacerSearch: Tool<typeof inputSchema> = {
     zh: `[PACER 美国专利诉讼检索] 按专利号 / 公司名 / 法院案件号查美国联邦法院专利诉讼案件,返回案件档案 + 完整 docket 流水时间线。
 Use when: 用户说"查美国专利诉讼""这个专利被起诉过吗""X 公司有没有专利官司""某案件号的进展""新品所用专利有没有诉讼史""IP 侵权风险排查(诉讼维度)";WIPO 查到风险专利号后,下一步定位对应的美国诉讼。
 Don't use: 想查外观专利/商标本身(用 wipo_search);想查商品/评论/排名(这是诉讼库,不是商品库)。
-Returns: data.data.{ total, hits[{ docketId, docketNumber, pacerCaseId, caseName, court, courtId, assignedTo, suitNature, jurisdiction, status, dateFiled, dateTerminated, parties[], patentNumbers[], entryTotal, entries[{ documentNumber, dateFiled, description, documentHref, pdfUrl, patentNumbers[] }] }] }(双层 data 外壳,与 wipo_search 一致)。
-Pair with: ↑ patentNumber / companyName / caseNumber 至少一个,多个 AND 取交集;↑ 常接 wipo_search(先 WIPO 找风险专利号 → 再 pacer_search 定位诉讼);↓ entries[].pdfUrl 可让用户下载原始法律文书。
-Cost: ~5 积点/次, ~3s。
+Returns: data.data.{ total, hits[{ docketId, docketNumber, pacerCaseId, caseName, court, courtId, assignedTo, suitNature, jurisdiction, status, dateFiled, dateTerminated, parties[], patentNumbers[], entryTotal, entries[{ documentNumber, dateFiled, description, documentHref, pdfUrl, patentNumbers[], extraDocument[{ document_number, document_href, pdf_url, patent_sumbers[] }] }] }] }(双层 data 外壳,与 wipo_search 一致)。注意 entries[].extraDocument 是该诉讼事件下挂的附件列表,大多为空 [](全量仅约 0.014% entry 有附件);附件字段是 snake_case(与 entry 本身驼峰不同),且 patent_sumbers 是上游原始拼写(非 numbers)。
+Pair with: ↑ patentNumber / companyName / caseNumber 至少一个,多个 AND 取交集;↑ 常接 wipo_search(先 WIPO 找风险专利号 → 再 pacer_search 定位诉讼);↓ entries[].pdfUrl 及 extraDocument[].pdf_url 可让用户下载原始法律文书/附件。
+Cost: ~12 积点/次, ~3s。
 ⚠️ 三个查询条件至少传一个,否则报错;size 上限 50,entrySize 上限 200;30s 超时则补更精确的专利号/案件号缩小范围。`,
     en: `[PACER US patent-litigation search] Search US federal-court patent lawsuits by patent number / company name / court case number; returns the case docket plus the full litigation event timeline.
 Use when: user says "search US patent litigation" / "has this patent been litigated" / "does company X have patent lawsuits" / "status of case number X" / "litigation history of a patent used in my new product" / "IP infringement risk (litigation angle)"; the step after WIPO surfaces a risky patent number — locate the matching US lawsuit.
 Don't use: to look up the design patent / trademark itself (use wipo_search); for products / reviews / ranks (this is a litigation database, not a commerce one).
-Returns: data.data.{ total, hits[{ docketId, docketNumber, pacerCaseId, caseName, court, courtId, assignedTo, suitNature, jurisdiction, status, dateFiled, dateTerminated, parties[], patentNumbers[], entryTotal, entries[{ documentNumber, dateFiled, description, documentHref, pdfUrl, patentNumbers[] }] }] } (double-data envelope, same as wipo_search).
-Pair with: ↑ at least one of patentNumber / companyName / caseNumber, multiple combined with AND; ↑ commonly chained after wipo_search (WIPO finds the risky patent number → pacer_search locates the lawsuit); ↓ entries[].pdfUrl lets the user download the original legal filing.
-Cost: ~5 points/call, ~3s.
+Returns: data.data.{ total, hits[{ docketId, docketNumber, pacerCaseId, caseName, court, courtId, assignedTo, suitNature, jurisdiction, status, dateFiled, dateTerminated, parties[], patentNumbers[], entryTotal, entries[{ documentNumber, dateFiled, description, documentHref, pdfUrl, patentNumbers[], extraDocument[{ document_number, document_href, pdf_url, patent_sumbers[] }] }] }] } (double-data envelope, same as wipo_search). NOTE: entries[].extraDocument is the list of attachments hung off that docket event, usually [] (~0.014% of entries have attachments); its fields are snake_case (unlike the camelCase entry), and patent_sumbers preserves the upstream misspelling (not "numbers").
+Pair with: ↑ at least one of patentNumber / companyName / caseNumber, multiple combined with AND; ↑ commonly chained after wipo_search (WIPO finds the risky patent number → pacer_search locates the lawsuit); ↓ entries[].pdfUrl and extraDocument[].pdf_url let the user download the original filing/attachment.
+Cost: ~12 points/call, ~3s.
 ⚠️ At least one of the three query conditions is required or it errors; size capped at 50, entrySize at 200; on a 30s timeout, narrow with a more precise patent/case number.`,
   }),
   inputSchema,
