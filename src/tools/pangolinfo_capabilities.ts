@@ -59,20 +59,11 @@ const TOOL_META: ToolMeta[] = [
   },
   {
     name: "get_amazon_reviews",
-    cost: "10pt/page · ~10s",
+    cost: "5pt/page · ~10s",
     domain: "amazon",
     oneLiner: {
       zh: "按 ASIN 翻页拉真实买家评论",
       en: "Page-fetch real buyer reviews for an ASIN",
-    },
-  },
-  {
-    name: "search_amazon_alexa",
-    cost: "6pt/call · ~30s",
-    domain: "amazon",
-    oneLiner: {
-      zh: "用自然语言问 Amazon Rufus，拿结构化商品推荐",
-      en: "Ask Amazon Rufus in natural language for grouped product picks",
     },
   },
   {
@@ -283,24 +274,12 @@ const WORKFLOWS = [
       en: "Pull seller.id from one known ASIN, then enumerate the seller's full catalog.",
     },
   },
-  {
-    title: { zh: "🤖 AI 场景化选品", en: "🤖 Scenario-based AI sourcing" },
-    steps: [
-      "search_amazon_alexa",
-      "get_amazon_product",
-      "get_amazon_reviews",
-    ],
-    note: {
-      zh: "用户只有场景没有关键词时：Rufus 给出多组候选商品 → 单 ASIN 深拆 → 差评挖痛点。固定 6pt/次，建议 prompts ≤3 条以保响应稳定。",
-      en: "When the user has a scene but no keyword: Rufus returns grouped candidates → single-ASIN deep-dive → critical-review pain points. Flat 6pt/call; keep prompts ≤3 for stable latency.",
-    },
-  },
 ];
 
 const TIPS = [
   {
-    zh: "成本意识：get_amazon_reviews 是最贵的（10 积点/页），其他多数 1-2 积点。批量抓评论前先 pageCount=1 探。",
-    en: "Cost awareness: get_amazon_reviews is the priciest (10pt/page), most others 1-2pt. Probe with pageCount=1 before scaling.",
+    zh: "成本意识：pacer_search 最贵(12 积点/次)，get_amazon_reviews 次之(5 积点/页)，其他多数 1-2 积点。批量抓评论前先 pageCount=1 探。",
+    en: "Cost awareness: pacer_search is the priciest (12pt/call), get_amazon_reviews next (5pt/page), most others 1-2pt. Probe with pageCount=1 before scaling.",
   },
   {
     zh: "格式选择：search_amazon / get_amazon_product 默认 format='json' 取结构化字段；只在用户明确要原始页时切 'markdown'。",
