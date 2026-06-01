@@ -15,7 +15,7 @@ Plug your favorite AI client (Claude Code, Cursor, Cline, Windsurf, Codex, Herme
 
 | | |
 |---|---|
-| **Version** | `0.6.0` |
+| **Version** | `0.6.1` |
 | **Tools** | 20 (19 backend + 1 self-introspection) |
 | **Transport** | stdio (MCP standard) |
 | **Runtime** | Node.js 18+ |
