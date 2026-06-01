@@ -1,6 +1,6 @@
 # pangolinfo-mcp
 
-> Pangolinfo MCP server — **19 Amazon e-commerce & IP data tools** for AI assistants via [Model Context Protocol](https://modelcontextprotocol.io).
+> Pangolinfo MCP server — **20 Amazon e-commerce & IP data tools** for AI assistants via [Model Context Protocol](https://modelcontextprotocol.io).
 
 Plug your favorite AI client (Claude Code, Cursor, Cline, Windsurf, Codex, Hermes, OpenClaw) into Pangolinfo's Amazon scrape APIs and let the AI run keyword research, listing analysis, review mining, niche discovery, category navigation, AI search lookups, keyword-trend checks, and WIPO trademark clearance — all from natural-language instructions.
 
@@ -16,7 +16,7 @@ Plug your favorite AI client (Claude Code, Cursor, Cline, Windsurf, Codex, Herme
 | | |
 |---|---|
 | **Version** | `0.6.0` |
-| **Tools** | 19 (18 backend + 1 self-introspection) |
+| **Tools** | 20 (19 backend + 1 self-introspection) |
 | **Transport** | stdio (MCP standard) |
 | **Runtime** | Node.js 18+ |
 | **License** | MIT |
@@ -189,7 +189,7 @@ mcp_servers:
 
 ---
 
-## Tools (19)
+## Tools (20)
 
 See [`MCP-TOOLS-MAP.md`](./MCP-TOOLS-MAP.md) for the full coordination graph (which tools chain into which).
 
@@ -213,7 +213,8 @@ See [`MCP-TOOLS-MAP.md`](./MCP-TOOLS-MAP.md) for the full coordination graph (wh
 | 16 | `ai_search` | AI Search via Google SERP (AI Overview + organic, with compliance disclaimer) | 2 |
 | 17 | `keyword_trends` | Keyword Trends via Google Trends (with compliance disclaimer) | 1.5 |
 | 18 | `scrape_url` | Power-user escape hatch: scrape a raw Amazon URL + parserName (non-standard pages) | 0.75 |
-| 19 | `pangolinfo_capabilities` | Self-introspection — what tools exist, how they chain | **0** (local) |
+| 19 | `search_amazon_alexa` | Amazon Rufus AI conversational product picks (scene-based, no keyword) | 6 |
+| 20 | `pangolinfo_capabilities` | Self-introspection — what tools exist, how they chain | **0** (local) |
 
 Default marketplace is **Amazon US** (`marketplaceId=ATVPDKIKX0DER`, `zip=90001`). Override per call via tool arguments.
 
@@ -260,7 +261,7 @@ After restarting your AI client, ask it:
 
 > List all available `pangolinfo` MCP tools.
 
-You should see 19 tools. Then try:
+You should see 20 tools. Then try:
 
 > Use `pangolinfo_capabilities` with mode "summary".
 
@@ -294,7 +295,7 @@ src/
 ├── i18n.ts             zh/en translation lookup
 └── tools/
     ├── _types.ts             Tool / ToolContext type definitions
-    ├── index.ts              Tool registry (19 tools)
+    ├── index.ts              Tool registry (20 tools)
     └── <verb_noun>.ts        One file per tool
 ```
 
