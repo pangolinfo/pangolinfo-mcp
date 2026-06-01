@@ -192,6 +192,15 @@ const TOOL_META: ToolMeta[] = [
       en: "PACER US patent-litigation case + docket timeline search",
     },
   },
+  {
+    name: "scrape_url",
+    cost: "1pt/~5s",
+    domain: "amazon",
+    oneLiner: {
+      zh: "高级逃生口:传完整 Amazon URL + parserName 抓非标准页(专用工具覆盖不到时才用)",
+      en: "Power-user escape hatch: scrape a raw Amazon URL + parserName for non-standard pages (use only when no purpose-built tool fits)",
+    },
+  },
 ];
 
 

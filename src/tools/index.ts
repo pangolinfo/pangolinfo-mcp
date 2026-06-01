@@ -25,12 +25,13 @@ import { wipoSearch } from "./wipo_search.js";
 import { pacerSearch } from "./pacer_search.js";
 import { aiSearch } from "./ai_search.js";
 import { keywordTrends } from "./keyword_trends.js";
+import { scrapeUrl } from "./scrape_url.js";
 import { pangolinfoCapabilities } from "./pangolinfo_capabilities.js";
 
 /**
- * v0.5.0 真实可用 = 18 个 tool（17 业务 + 1 自省 pangolinfo_capabilities）。
+ * v0.6.0 真实可用 = 19 个 tool（18 业务 + 1 自省 pangolinfo_capabilities）。
  * pangolinfo_capabilities 放在第一位 — 这是 AI 第一次接入时建议先调的自省接口。
- * 注：search_amazon_alexa (Rufus) 已于 0.5.0 移除 — 上游 API 不再提供。
+ * 注：search_amazon_alexa (Rufus) 已于 0.5.0 移除；scrape_url 通用逃生口于 0.6.0 新增。
  */
 export const tools: Tool[] = [
   pangolinfoCapabilities,
@@ -51,4 +52,5 @@ export const tools: Tool[] = [
   pacerSearch,
   aiSearch,
   keywordTrends,
+  scrapeUrl,
 ];
