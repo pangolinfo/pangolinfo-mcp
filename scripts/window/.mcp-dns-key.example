@@ -1,0 +1,4 @@
+# 复制成 .mcp-dns-key (无扩展名,同目录),填一行 ed25519 hex 私钥
+# 用于 mcp-publisher login dns 发布到官方 MCP Registry (com.pangolinfo 命名空间)
+# 该文件已 gitignore。私钥见团队密钥库 / memory reference_mcp_official_registry
+<在这里填 64 位 hex 私钥>

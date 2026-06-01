@@ -37,3 +37,4 @@ mcp-publisher*.tar.gz
 # DNS auth private key — NEVER commit
 mcp_dns_key.pem
 *.ed25519.key
+scripts/window/.mcp-dns-key
