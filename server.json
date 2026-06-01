@@ -1,0 +1,24 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "com.pangolinfo/amazon-mcp",
+  "description": "Amazon data MCP: products, rankings, reviews, niches, WIPO & PACER IP, AI search & trends.",
+  "repository": {
+    "url": "https://github.com/pangolinfo/pangolinfo-mcp",
+    "source": "github"
+  },
+  "version": "0.5.0",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://mcp.pangolinfo.com/mcp?api_key={api_key}",
+      "variables": {
+        "api_key": {
+          "description": "Your personal Pangolinfo API key. Get one at https://tool.pangolinfo.com/?sourceTag=mcp (new users receive 60 free credits).",
+          "isRequired": true,
+          "isSecret": true,
+          "format": "string"
+        }
+      }
+    }
+  ]
+}

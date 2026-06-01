@@ -28,3 +28,12 @@ nul
 .kube/
 *.kubeconfig
 .aliyun/
+
+# MCP Registry publisher CLI (downloaded binary, not source)
+mcp-publisher
+mcp-publisher.exe
+mcp-publisher.tar.gz
+mcp-publisher*.tar.gz
+# DNS auth private key — NEVER commit
+mcp_dns_key.pem
+*.ed25519.key
