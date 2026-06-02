@@ -1,7 +1,7 @@
 # Pangolinfo MCP — Tools Map
 
 > 给 AI Agent 和工程师同时看的工具协同图。
-> Live：18（17 业务 + 1 自省 `pangolinfo_capabilities`）。
+> Live：19（18 业务 + 1 自省 `pangolinfo_capabilities`）。
 
 ## 🚀 给 AI 的快速入口
 
@@ -24,7 +24,6 @@
 | `list_new_releases` | 类目新品榜 Top-50（30 天） | `categorySlug` | 1pt / ~5s |
 | `list_seller_products` | 卖家店铺全部商品 | `sellerId` | 1pt / ~5s |
 | `list_category_products` | 类目下具体商品分页 | `nodeId` | 1pt / ~5s |
-| `search_amazon_alexa` | 自然语言问 Amazon Rufus AI 拿分组推荐 | `prompts[]` | **6pt/次** / ~30s |
 | `scrape_url` | 高级逃生口:content 零件或完整 url + parserName 抓非标准页 | `parserName` + (`content` 或 `url`) | 1pt / ~5s |
 
 ### 🧭 Amazon 利基数据（5）
