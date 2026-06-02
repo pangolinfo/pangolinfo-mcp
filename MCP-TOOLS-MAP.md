@@ -1,7 +1,7 @@
 # Pangolinfo MCP — Tools Map
 
 > 给 AI Agent 和工程师同时看的工具协同图。
-> Live：19（18 业务 + 1 自省 `pangolinfo_capabilities`）。
+> Live：20（19 业务 + 1 自省 `pangolinfo_capabilities`）。
 
 ## 🚀 给 AI 的快速入口
 
@@ -14,7 +14,7 @@
 
 ## 工具按业务域分组
 
-### 🛒 Amazon 抓取（8）
+### 🛒 Amazon 抓取（9）
 | Tool | 一句话 | 必填 | 成本 |
 |---|---|---|---|
 | `search_amazon` | 关键词 SERP 首屏 ASIN 列表 | `keyword` | 1pt / ~5s |
@@ -25,6 +25,7 @@
 | `list_seller_products` | 卖家店铺全部商品 | `sellerId` | 1pt / ~5s |
 | `list_category_products` | 类目下具体商品分页 | `nodeId` | 1pt / ~5s |
 | `scrape_url` | 高级逃生口:content 零件或完整 url + parserName 抓非标准页 | `parserName` + (`content` 或 `url`) | 1pt / ~5s |
+| `search_amazon_alexa` | 自然语言问 Amazon Rufus AI 拿分组推荐 | `prompts[]` | **6pt/次** / ~30s |
 
 ### 🧭 Amazon 利基数据（5）
 | Tool | 一句话 | 必填 | 成本 |
@@ -39,8 +40,8 @@
 | Tool | 一句话 | 必填 | 成本 |
 |---|---|---|---|
 | `search_local_maps` | Maps 本地商家 | `query`, `latitude`, `longitude` | 1.5pt / ~5s |
-| `google_ai_search` | SERP + AI Overview | `query` | 2pt / ~30s |
-| `google_trends` | 关键词热度对比 | `keywords[]` | 1.5pt / ~5s |
+| `ai_search` | SERP + AI Overview | `query` | 2pt / ~30s |
+| `keyword_trends` | 关键词热度对比 | `keywords[]` | 1.5pt / ~5s |
 
 ### ⚖️ IP（2）
 | Tool | 一句话 | 必填 | 成本 |
@@ -69,8 +70,8 @@ graph TD
 
     Q1 --> SA["search_amazon"]
     Q1 --> SC["search_categories"]
-    Q1 --> GT["google_trends"]
-    Q1 --> GAS["google_ai_search"]
+    Q1 --> GT["keyword_trends"]
+    Q1 --> GAS["ai_search"]
 
     Q2 --> GAP["get_amazon_product"]
     Q3 --> SC
@@ -145,14 +146,14 @@ list_seller_products            # 看卖家全部铺货
 ```
 list_bestsellers                # 长青龙头
 list_new_releases               # 新进黑马
-google_trends                   # 外部需求方向
+keyword_trends                   # 外部需求方向
 ```
 
 ### 🌐 WF4: 外部需求验证
 ```
-google_trends                   # 看热度走势
+keyword_trends                   # 看热度走势
   ↓ rising / breakout 词
-google_ai_search (mode='overview')  # 看 AI Overview 引用了什么源
+ai_search (mode='overview')  # 看 AI Overview 引用了什么源
   ↓ related searches
 search_amazon                   # 反向看 Amazon 内有没有对应商品
 ```
@@ -191,8 +192,8 @@ list_seller_products            # 该 seller 的所有商品
 | `filter_categories` | `categoryId` | `list_category_products`, `get_category_paths`, `list_bestsellers` (slug 推导) |
 | `list_bestsellers` / `list_new_releases` | `recsList[].id` (ASIN) | `get_amazon_product` |
 | `list_category_products` / `list_seller_products` | `results[].asin` | `get_amazon_product`, `get_amazon_reviews` |
-| `google_trends` | `keywordsRankData[].rankList[]` (breakout terms) | `search_amazon`, `google_ai_search` |
-| `google_ai_search` | `ai_overview.references[].url`, `organic[].url` | (人类阅读为主) |
+| `keyword_trends` | `keywordsRankData[].rankList[]` (breakout terms) | `search_amazon`, `ai_search` |
+| `ai_search` | `ai_overview.references[].url`, `organic[].url` | (人类阅读为主) |
 
 ## 成本对照
 
@@ -200,9 +201,9 @@ list_seller_products            # 该 seller 的所有商品
 |---|---|
 | **免费** | `pangolinfo_capabilities` |
 | **1 pt** | `search_amazon`, `get_amazon_product`, `list_bestsellers`, `list_new_releases`, `list_seller_products`, `list_category_products`, `search_categories`, `get_category_children`, `get_category_paths`, `filter_categories`, `filter_niches` |
-| **1.5 pt** | `search_local_maps`, `google_trends` |
-| **2 pt** | `google_ai_search`, `wipo_search` |
-| **10 pt/页** ⚠️ | `get_amazon_reviews` |
+| **1.5 pt** | `search_local_maps`, `keyword_trends` |
+| **2 pt** | `ai_search`, `wipo_search` |
+| **5 pt/页** ⚠️ | `get_amazon_reviews` |
 
 **预算建议**：跑一次 WF1（从 0 选品）保守估计 5-10 pt；加 reviews 挖痛点 +10-30 pt；带 wipo 排查 +2-4 pt。
 
@@ -233,7 +234,7 @@ MCP **故意不暴露**以下能力（属于商业 / 安全敏感操作）：
 - **MCP 协议版本**：2024-11-05
 - **传输**：stdio JSON-RPC（一行一消息）
 - **server.name**：`pangolinfo-mcp`
-- **server.version**：`0.1.0`
+- **server.version**：`0.6.3`
 - **capabilities**：`tools` only（暂不支持 `prompts` / `resources`）
 
 ## 相关文档

@@ -201,6 +201,15 @@ const TOOL_META: ToolMeta[] = [
       en: "Power-user escape hatch: scrape a raw Amazon URL + parserName for non-standard pages (use only when no purpose-built tool fits)",
     },
   },
+  {
+    name: "search_amazon_alexa",
+    cost: "6pt/~30s",
+    domain: "amazon",
+    oneLiner: {
+      zh: "自然语言问 Amazon Rufus AI 购物助手,拿分组商品推荐(只有场景没关键词时用)",
+      en: "Ask Amazon Rufus AI assistant in natural language for grouped product picks (scene-based, no keyword)",
+    },
+  },
 ];
 
 
