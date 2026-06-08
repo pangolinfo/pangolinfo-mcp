@@ -6,7 +6,7 @@
     "url": "https://github.com/pangolinfo/pangolinfo-mcp",
     "source": "github"
   },
-  "version": "0.6.3",
+  "version": "0.7.0",
   "remotes": [
     {
       "type": "streamable-http",
