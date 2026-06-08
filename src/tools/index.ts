@@ -22,7 +22,6 @@ import { filterNiches } from "./filter_niches.js";
 import { getCategoryPaths } from "./get_category_paths.js";
 import { searchLocalMaps } from "./search_local_maps.js";
 import { wipoSearch } from "./wipo_search.js";
-import { pacerSearch } from "./pacer_search.js";
 import { aiSearch } from "./ai_search.js";
 import { keywordTrends } from "./keyword_trends.js";
 import { scrapeUrl } from "./scrape_url.js";
@@ -30,11 +29,12 @@ import { searchAmazonAlexa } from "./search_amazon_alexa.js";
 import { pangolinfoCapabilities } from "./pangolinfo_capabilities.js";
 
 /**
- * v0.6.3 真实可用 = 20 个 tool（19 业务 + 1 自省 pangolinfo_capabilities）。
+ * 真实可用 = 19 个 tool（18 业务 + 1 自省 pangolinfo_capabilities）。
  * pangolinfo_capabilities 放在第一位 — 这是 AI 第一次接入时建议先调的自省接口。
  * 注：scrape_url 通用逃生口于 0.6.0 新增。
  *     search_amazon_alexa (Rufus): 0.5.0 移除 → 0.6.1 加回 → 0.6.2 移除 → 0.6.3 恢复
  *     (上游 alexa API 已恢复支持;参数格式 parserName=amazonAlexa + param[] + screenshot)。
+ *     pacer_search: 独立工具于 2026-06 退役 → 诉讼能力并入 wipo_search 的 enableLitigation 参数。
  */
 export const tools: Tool[] = [
   pangolinfoCapabilities,
@@ -52,7 +52,6 @@ export const tools: Tool[] = [
   getCategoryPaths,
   searchLocalMaps,
   wipoSearch,
-  pacerSearch,
   aiSearch,
   keywordTrends,
   scrapeUrl,

@@ -7,6 +7,12 @@
  * returns Apple's US design-patent hits with IRN / HOL / DETAIL_DATA / IMG /
  * IMG_DATA / DC / RD / STATUS / LCS fields. pointCost=2.
  *
+ * enable_litigation (2026-06): when true, the backend chains a US litigation
+ * (PACER) lookup by patent number and joins cases into each hit as
+ * litigationStatus / caseTotal / cases[{ caseId, docketNumber, ... }].
+ * Charged +12 only when a patent is found (formerly the standalone pacer_search
+ * tool, now folded into wipo_search; the standalone tool was retired).
+ *
  * BACKEND PERF CONTRACT (backend reads OSS Parquet via DuckDB and rejects /
  * full-scans on wrong params):
  *   - `source` is REQUIRED (USID / CNID / DEID / JPID / KRID / EMID / FRID
@@ -132,8 +138,8 @@ const inputSchema = z.object({
     .optional()
     .describe(
       t({
-        zh: "洛迦诺分类号（外观设计国际分类），如 '23-01' = 流体分配设备。",
-        en: "Locarno Classification code (international design classification), e.g. '23-01' = fluid distribution equipment.",
+        zh: "外观设计分类（洛迦诺分类号 LCS），如 '23-01' = 流体分配设备。",
+        en: "Design classification (Locarno Classification code), e.g. '23-01' = fluid distribution equipment.",
       }),
     ),
   from: z
@@ -156,6 +162,15 @@ const inputSchema = z.object({
         en: "Page size (default 10, max 100).",
       }),
     ),
+  enableLitigation: z
+    .boolean()
+    .default(false)
+    .describe(
+      t({
+        zh: "是否开启智能联动风控模式：命中专利后自动用专利号查关联的美国诉讼案件（底层 PACER），案件 join 进每条专利的 cases 字段。默认 false。开启后每条命中专利会多 litigationStatus / caseTotal / cases 字段；仅当查到专利才额外计费 +12 积点（没查到专利不收）。",
+        en: "Enable Smart Risk Control Mode: after patents match, auto-query related US litigation (PACER backend) by patent number; cases are joined into each patent's `cases` field. Default false. When on, each matched patent gains litigationStatus / caseTotal / cases; +12 points charged only when a patent is found (free if none).",
+      }),
+    ),
 });
 
 export const wipoSearch: Tool<typeof inputSchema> = {
@@ -164,17 +179,17 @@ export const wipoSearch: Tool<typeof inputSchema> = {
     zh: `[WIPO 全球外观设计 / 商标检索] 查 WIPO 全球外观设计数据库（USPTO 美国外观、CNID 中国、HAGUE 海牙国际注册等 12 个 source）。
 Use when: 用户说"查商标""查外观专利""新品有没有侵权风险""X 公司的专利布局""WIPO 检索""USPTO 查询""DM/XXX 这个国际注册号是什么"；选品 / GTM SOP 里立项前的 IP 风险排查；竞品 IP 布局调研。
 Don't use: 想查关键词排名 / 商品评论 / 商品详情（这是 IP 数据库，不是商品库）；只想要美国注册商标文字检索（这个数据库主要是外观设计，文字商标覆盖有限）。
-Returns: data.data.{ total, hits[{ IRN, HOL[], DETAIL_DATA.structured.{indication_of_products, statement_of_novelty, ...}, IMG[], IMG_DATA[{filename,url}], DC, RD, STATUS, LCS[], DS[], PROD[], SOURCE, DETAIL_URL }] }。
-Pair with: ↑ 必填 source；hol=权利人 / prod=产品名 / irn=国际注册号 / lcs=洛迦诺分类号；↓ DETAIL_URL 可让用户跳转 WIPO 官网核查。
-Cost: ~2 积点/次, ~5s。
-⚠️ 性能契约: CNID + hol/prod 必须配 id/idSearch/rd/status/lcs 至少一项（否则 17M 行全表扫描会被拒）；JPID 无 HOL/PROD 字段；USID 无 STATUS 字段；ed (过期日期) 在所有 source 都被忽略，要按日期筛用 rd。`,
+Returns: data.data.{ total, hits[{ IRN, HOL[], DETAIL_DATA.structured.{indication_of_products, statement_of_novelty, ...}, IMG[], IMG_DATA[{filename,url}], DC, RD, STATUS, LCS[], DS[], PROD[], SOURCE, DETAIL_URL }] }。开 enableLitigation=true 时每条命中专利额外追加 litigationStatus(success/skipped/failed) + caseTotal + cases[{ caseId, docketNumber, caseName, court, status, dateFiled, parties[], patentNumbers[], entries[] }]（底层是美国 PACER 诉讼数据，一次调用直出专利+诉讼）。
+Pair with: ↑ 必填 source；hol=权利人 / prod=产品名 / irn=国际注册号 / lcs=外观设计分类号；enableLitigation=true 联动查美国诉讼（侵权风险闭环，无需再调别的工具）；↓ DETAIL_URL 可让用户跳转 WIPO 官网核查。
+Cost: ~2 积点/次, ~5s；enableLitigation=true 且查到专利再 +12 积点（没查到专利不收）。
+⚠️ 性能契约: CNID + hol/prod 必须配 id/idSearch/rd/status/lcs 至少一项（否则 17M 行全表扫描会被拒）；JPID 无 HOL/PROD 字段；USID 无 STATUS 字段；ed (过期日期) 在所有 source 都被忽略，要按日期筛用 rd。开 enableLitigation 后每翻一页都会重新触发诉讼查询与计费。`,
     en: `[WIPO global design / IP search] Query the WIPO design database across 12 sources (USPTO US designs, CNID China, HAGUE international registrations, …).
 Use when: user says "check trademark" / "design patent search" / "any IP risk for new product" / "X company's patent portfolio" / "WIPO search" / "USPTO query" / "what is registration DM/XXX"; pre-launch IP clearance during scouting/GTM SOPs; competitor IP-portfolio research.
 Don't use: for keyword ranks / product reviews / product detail (this is an IP database, not a commerce database); for US text-trademark search (this DB focuses on design patents — text trademark coverage is limited).
-Returns: data.data.{ total, hits[{ IRN, HOL[], DETAIL_DATA.structured.{indication_of_products, statement_of_novelty, ...}, IMG[], IMG_DATA[{filename,url}], DC, RD, STATUS, LCS[], DS[], PROD[], SOURCE, DETAIL_URL }] }.
-Pair with: ↑ source required; hol=holder name / prod=product name / irn=international registration / lcs=Locarno class; ↓ DETAIL_URL lets the user jump to WIPO's official page to verify.
-Cost: ~2 points/call, ~5s.
-⚠️ Perf contract: CNID + hol/prod MUST be paired with id/idSearch/rd/status/lcs (otherwise the backend rejects to avoid a 17M-row full scan); JPID has no HOL/PROD; USID has no STATUS; ed (expiration date) is silently ignored on all sources — filter dates via rd instead.`,
+Returns: data.data.{ total, hits[{ IRN, HOL[], DETAIL_DATA.structured.{indication_of_products, statement_of_novelty, ...}, IMG[], IMG_DATA[{filename,url}], DC, RD, STATUS, LCS[], DS[], PROD[], SOURCE, DETAIL_URL }] }. With enableLitigation=true each matched patent additionally carries litigationStatus(success/skipped/failed) + caseTotal + cases[{ caseId, docketNumber, caseName, court, status, dateFiled, parties[], patentNumbers[], entries[] }] (backed by US PACER litigation data — one call returns patents + lawsuits).
+Pair with: ↑ source required; hol=holder name / prod=product name / irn=international registration / lcs=design classification; enableLitigation=true chains US litigation lookup (IP-risk loop, no separate tool needed); ↓ DETAIL_URL lets the user jump to WIPO's official page to verify.
+Cost: ~2 points/call, ~5s; with enableLitigation=true add +12 points only when a patent is found (free if none).
+⚠️ Perf contract: CNID + hol/prod MUST be paired with id/idSearch/rd/status/lcs (otherwise the backend rejects to avoid a 17M-row full scan); JPID has no HOL/PROD; USID has no STATUS; ed (expiration date) is silently ignored on all sources — filter dates via rd instead. With enableLitigation on, each page re-triggers the litigation query and billing.`,
   }),
   inputSchema,
   async execute(input, ctx) {
@@ -191,7 +206,7 @@ Cost: ~2 points/call, ~5s.
     }
 
     ctx.logger.info(
-      `wipo_search: source=${input.source} hol=${input.hol ?? ""} prod=${input.prod ?? ""} irn=${input.irn ?? ""} from=${input.from} num=${input.num}`,
+      `wipo_search: source=${input.source} hol=${input.hol ?? ""} prod=${input.prod ?? ""} irn=${input.irn ?? ""} from=${input.from} num=${input.num} enableLitigation=${input.enableLitigation}`,
     );
 
     // Build request body — only include set fields plus required `source`.
@@ -209,6 +224,7 @@ Cost: ~2 points/call, ~5s.
     if (input.rd) body.rd = input.rd;
     if (input.status) body.status = input.status;
     if (input.lcs) body.lcs = input.lcs;
+    if (input.enableLitigation) body.enable_litigation = true; // backend snake_case; only send when on
 
     return ctx.client.post("/api/v3/wipo", body);
   },

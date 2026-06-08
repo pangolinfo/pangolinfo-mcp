@@ -176,20 +176,11 @@ const TOOL_META: ToolMeta[] = [
   },
   {
     name: "wipo_search",
-    cost: "2pt/~5s",
+    cost: "2pt/~5s (+12 当开 enableLitigation 且查到专利)",
     domain: "ip",
     oneLiner: {
-      zh: "WIPO 全球外观设计/商标检索",
-      en: "WIPO global design / IP search",
-    },
-  },
-  {
-    name: "pacer_search",
-    cost: "12pt/~3s",
-    domain: "ip",
-    oneLiner: {
-      zh: "PACER 美国专利诉讼案件 + docket 流水检索",
-      en: "PACER US patent-litigation case + docket timeline search",
+      zh: "WIPO 全球外观设计检索，可选 enableLitigation 联动美国专利诉讼",
+      en: "WIPO global design search, optional enableLitigation chains US patent litigation",
     },
   },
   {
@@ -271,14 +262,13 @@ const WORKFLOWS = [
     },
   },
   {
-    title: { zh: "⚖️ 专利侵权诉讼闭环（WIPO → PACER）", en: "⚖️ Patent-litigation loop (WIPO → PACER)" },
+    title: { zh: "⚖️ 专利侵权诉讼闭环（一次调用）", en: "⚖️ Patent-litigation loop (single call)" },
     steps: [
-      "wipo_search (source='USID', prod='<product>')  // 找风险专利号",
-      "pacer_search (patentNumber='<from WIPO>')       // 定位对应美国诉讼 + docket 流水",
+      "wipo_search (source='USID', prod='<product>', enableLitigation=true)  // 专利 + 关联美国诉讼一次直出",
     ],
     note: {
-      zh: "先用 WIPO 找出新品涉及的风险专利号，再用 pacer_search 查这些专利在美国有没有被诉讼、案件进展、原被告，形成端到端 IP 风险闭环。pacer_search 也可直接按公司名 / 案件号查。",
-      en: "Use WIPO to surface risky patent numbers for a new product, then pacer_search to check whether those patents have been litigated in the US, the case status, and the parties — an end-to-end IP-risk loop. pacer_search also takes companyName / caseNumber directly.",
+      zh: "开 enableLitigation=true，wipo_search 会在命中专利后自动用专利号联动查美国诉讼（底层 PACER），每条命中专利直接带 litigationStatus / caseTotal / cases[]（案件进展、原被告、docket 流水），一次调用形成端到端 IP 风险闭环。仅查到专利才 +12 积点。",
+      en: "With enableLitigation=true, after wipo_search matches patents it auto-chains a US litigation lookup (PACER backend) by patent number; each matched patent directly carries litigationStatus / caseTotal / cases[] (case status, parties, docket timeline) — an end-to-end IP-risk loop in one call. +12 points only when a patent is found.",
     },
   },
   {
@@ -296,8 +286,8 @@ const WORKFLOWS = [
 
 const TIPS = [
   {
-    zh: "成本意识：pacer_search 最贵(12 积点/次)，get_amazon_reviews 次之(5 积点/页)，其他多数 1-2 积点。批量抓评论前先 pageCount=1 探。",
-    en: "Cost awareness: pacer_search is the priciest (12pt/call), get_amazon_reviews next (5pt/page), most others 1-2pt. Probe with pageCount=1 before scaling.",
+    zh: "成本意识：wipo_search 开 enableLitigation 且查到专利最贵(基础 2 + 诉讼 12 = 14 积点/次)，get_amazon_reviews 次之(5 积点/页)，其他多数 1-2 积点。批量抓评论前先 pageCount=1 探。",
+    en: "Cost awareness: wipo_search with enableLitigation on a matched patent is priciest (base 2 + litigation 12 = 14pt/call), get_amazon_reviews next (5pt/page), most others 1-2pt. Probe with pageCount=1 before scaling.",
   },
   {
     zh: "格式选择：search_amazon / get_amazon_product 默认 format='json' 取结构化字段；只在用户明确要原始页时切 'markdown'。",
