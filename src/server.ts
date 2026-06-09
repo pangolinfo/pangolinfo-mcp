@@ -174,15 +174,74 @@ function detectTransport(): "stdio" | "http" {
  *   - `?api_key=pgl_xxx` URL query parameter (Sorftime-style, easiest)
  *   - `Authorization: Bearer pgl_xxx` header (more professional)
  *
+ * The `Bearer` scheme is matched case-INSENSITIVELY per RFC 7235 §2.1
+ * ("auth-scheme" is case-insensitive). Many agents/HTTP libraries emit
+ * lowercase `bearer ` or uppercase `BEARER `; rejecting those caused
+ * spurious 401s even when the caller's key was perfectly valid — the
+ * header was present but silently ignored, so the request fell through
+ * to the (absent) URL param. See server.ts auth tests.
+ *
  * Returns null if neither is present — caller responds 401.
  */
+/**
+ * The MCP StreamableHTTP transport requires POST requests to accept both
+ * `application/json` and `text/event-stream`. Agents frequently send only
+ * one (or none), yielding a confusing 406. Normalize the header in place
+ * so the SDK transport is satisfied — callers shouldn't need to know the
+ * transport's content-negotiation rules. Only mutates when something is
+ * missing; a correct header is left untouched.
+ */
+function ensureStreamableAccept(req: IncomingMessage): void {
+  if (req.method !== "POST") return;
+  const raw: string | string[] | undefined = req.headers["accept"];
+  const current = Array.isArray(raw) ? raw.join(",") : raw ?? "";
+  // NOTE: the SDK checks for the LITERAL substrings "application/json" and
+  // "text/event-stream" — it does NOT honor `*/*`. So a client sending
+  // `Accept: */*` still gets a 406 unless we add the explicit types.
+  // Match the SDK's literal check exactly here.
+  const lc = current.toLowerCase();
+  const hasJson = lc.includes("application/json");
+  const hasSse = lc.includes("text/event-stream");
+  if (hasJson && hasSse) return;
+
+  const parts: string[] = [];
+  if (current.trim()) parts.push(current.trim());
+  if (!hasJson) parts.push("application/json");
+  if (!hasSse) parts.push("text/event-stream");
+  const fixed = parts.join(", ");
+
+  // Update BOTH header views. The MCP SDK's Node transport delegates to
+  // Hono's @hono/node-server, which rebuilds the Web `Request` headers
+  // from `req.rawHeaders` (the flat [k0,v0,k1,v1,...] array) and ignores
+  // the normalized `req.headers` map entirely. So mutating `req.headers`
+  // alone is invisible to the transport — we must patch `rawHeaders` too.
+  req.headers["accept"] = fixed;
+  const rh = req.rawHeaders;
+  let patched = false;
+  for (let i = 0; i < rh.length; i += 2) {
+    if (rh[i]?.toLowerCase() === "accept") {
+      rh[i + 1] = fixed;
+      patched = true;
+      // Keep scanning: there can be multiple Accept entries; collapsing
+      // them all to the fixed value is fine and avoids partial matches.
+    }
+  }
+  if (!patched) {
+    rh.push("Accept", fixed);
+  }
+}
+
 function extractApiKey(req: IncomingMessage): string | null {
   // Authorization header takes precedence (less likely to end up in
   // logs / browser history; for clients that bother to set it).
   const auth = req.headers["authorization"];
-  if (typeof auth === "string" && auth.startsWith("Bearer ")) {
-    const k = auth.slice("Bearer ".length).trim();
-    if (k) return k;
+  if (typeof auth === "string") {
+    // Case-insensitive "bearer" + at least one space, then the token.
+    const m = /^bearer\s+(.+)$/i.exec(auth.trim());
+    if (m) {
+      const k = m[1].trim();
+      if (k) return k;
+    }
   }
 
   // Fall back to ?api_key=... in the URL.
@@ -269,6 +328,15 @@ async function startHttp(): Promise<void> {
       writeJson(res, 404, { error: "Not found", hint: "POST /mcp" });
       return;
     }
+
+    // The StreamableHTTP transport (MCP spec) requires the POST `Accept`
+    // header to advertise BOTH application/json AND text/event-stream;
+    // otherwise it rejects the request with 406. Many agents/HTTP libs
+    // send only `Accept: application/json` (or omit Accept entirely),
+    // which surfaced to users as an opaque 406. We don't want callers to
+    // care about this protocol detail, so we backfill the missing media
+    // type here before handing the request to the SDK transport.
+    ensureStreamableAccept(req);
 
     const apiKey = extractApiKey(req);
     if (!apiKey) {

@@ -17,9 +17,9 @@ Plug your favorite AI client (Claude Code, Cursor, Cline, Windsurf, Codex, Herme
 
 | | |
 |---|---|
-| **Version** | `0.6.3` |
+| **Version** | `0.7.2` |
 | **Tools** | 20 (19 backend + 1 self-introspection) |
-| **Transport** | stdio (MCP standard) |
+| **Transport** | stdio (local) · streamable HTTP (hosted — see below) |
 | **Runtime** | Node.js 18+ |
 | **License** | MIT |
 | **Get an API key** | <https://tool.pangolinfo.com/> |
@@ -188,6 +188,72 @@ mcp_servers:
   }
 }
 ```
+
+---
+
+## Hosted (remote HTTP) — no local install
+
+Don't want to install anything? Point your AI client at the hosted endpoint
+instead of a local `server.mjs`. This is the **streamable HTTP** transport
+(MCP spec), multi-tenant — you bring your own key on every request.
+
+| | |
+|---|---|
+| **Endpoint** | `https://mcp.pangolinfo.com/mcp` |
+| **Transport** | Streamable HTTP (POST + SSE) |
+| **Auth** | Your `pgl_xxxxxxxx` key, via Bearer header **or** URL query |
+
+### Passing your API key — two ways
+
+**1. `Authorization` header (recommended)**
+
+```
+Authorization: Bearer pgl_xxxxxxxx
+```
+
+This is the preferred method: the key stays out of URLs, logs, and browser
+history. The `Bearer` scheme is matched **case-insensitively** (`bearer`,
+`BEARER`, `Bearer` all work) and extra whitespace is tolerated.
+
+**2. `?api_key=` URL query (fallback)**
+
+```
+https://mcp.pangolinfo.com/mcp?api_key=pgl_xxxxxxxx
+```
+
+Easiest for clients that only let you paste a URL. If your key contains
+URL-special characters, **URL-encode it**. The header (method 1) takes
+precedence if both are supplied.
+
+### Client config example (Claude Code / Cursor — `"url"`-style remote MCP)
+
+```json
+{
+  "mcpServers": {
+    "pangolinfo": {
+      "url": "https://mcp.pangolinfo.com/mcp",
+      "headers": { "Authorization": "Bearer pgl_xxxxxxxx" }
+    }
+  }
+}
+```
+
+> If your client can't set headers, fall back to the URL form:
+> `"url": "https://mcp.pangolinfo.com/mcp?api_key=pgl_xxxxxxxx"`.
+
+### Notes for custom / raw HTTP integrations
+
+If you're calling the endpoint directly (not through a standard MCP client):
+
+- **POST** your JSON-RPC body to `/mcp`.
+- The MCP streamable transport normally requires the request to advertise
+  **both** `application/json` and `text/event-stream` in its `Accept` header.
+  This server **backfills** the missing media type for you, so a plain
+  `Accept: application/json`, `Accept: */*`, or even a missing `Accept`
+  header all work — you don't need to hand-craft it.
+- A `401` means the key was not found in **either** the header **or** the
+  query string — check that your client actually sent it (some libraries
+  drop the `Authorization` header on cross-origin redirects).
 
 ---
 
