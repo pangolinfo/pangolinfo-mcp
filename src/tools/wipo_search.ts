@@ -176,14 +176,14 @@ const inputSchema = z.object({
 export const wipoSearch: Tool<typeof inputSchema> = {
   name: "wipo_search",
   description: t({
-    zh: `[WIPO 全球外观设计 / 商标检索] 查 WIPO 全球外观设计数据库（USPTO 美国外观、CNID 中国、HAGUE 海牙国际注册等 12 个 source）。
+    zh: `[Design Patent TRO 风控 · WIPO 全球外观设计 / 商标检索] 查 WIPO 全球外观设计数据库（USPTO 美国外观、CNID 中国、HAGUE 海牙国际注册等 12 个 source），并可一键联动美国设计专利 TRO（临时限制令）/ 诉讼风控。
 Use when: 用户说"查商标""查外观专利""新品有没有侵权风险""X 公司的专利布局""WIPO 检索""USPTO 查询""DM/XXX 这个国际注册号是什么"；选品 / GTM SOP 里立项前的 IP 风险排查；竞品 IP 布局调研。
 Don't use: 想查关键词排名 / 商品评论 / 商品详情（这是 IP 数据库，不是商品库）；只想要美国注册商标文字检索（这个数据库主要是外观设计，文字商标覆盖有限）。
 Returns: data.data.{ total, hits[{ IRN, HOL[], DETAIL_DATA.structured.{indication_of_products, statement_of_novelty, ...}, IMG[], IMG_DATA[{filename,url}], DC, RD, STATUS, LCS[], DS[], PROD[], SOURCE, DETAIL_URL }] }。开 enableLitigation=true 时每条命中专利额外追加 litigationStatus(success/skipped/failed) + caseTotal + cases[{ caseId, docketNumber, caseName, court, status, dateFiled, parties[], patentNumbers[], entries[] }]（底层是美国 PACER 诉讼数据，一次调用直出专利+诉讼）。
 Pair with: ↑ 必填 source；hol=权利人 / prod=产品名 / irn=国际注册号 / lcs=外观设计分类号；enableLitigation=true 联动查美国诉讼（侵权风险闭环，无需再调别的工具）；↓ DETAIL_URL 可让用户跳转 WIPO 官网核查。
 Cost: ~2 积点/次, ~5s；enableLitigation=true 且查到专利再 +12 积点（没查到专利不收）。
 ⚠️ 性能契约: CNID + hol/prod 必须配 id/idSearch/rd/status/lcs 至少一项（否则 17M 行全表扫描会被拒）；JPID 无 HOL/PROD 字段；USID 无 STATUS 字段；ed (过期日期) 在所有 source 都被忽略，要按日期筛用 rd。开 enableLitigation 后每翻一页都会重新触发诉讼查询与计费。`,
-    en: `[WIPO global design / IP search] Query the WIPO design database across 12 sources (USPTO US designs, CNID China, HAGUE international registrations, …).
+    en: `[Design Patent TRO risk control · WIPO global design / IP search] Query the WIPO design database across 12 sources (USPTO US designs, CNID China, HAGUE international registrations, …), with one-click chaining to US design-patent TRO (temporary restraining order) / litigation risk control.
 Use when: user says "check trademark" / "design patent search" / "any IP risk for new product" / "X company's patent portfolio" / "WIPO search" / "USPTO query" / "what is registration DM/XXX"; pre-launch IP clearance during scouting/GTM SOPs; competitor IP-portfolio research.
 Don't use: for keyword ranks / product reviews / product detail (this is an IP database, not a commerce database); for US text-trademark search (this DB focuses on design patents — text trademark coverage is limited).
 Returns: data.data.{ total, hits[{ IRN, HOL[], DETAIL_DATA.structured.{indication_of_products, statement_of_novelty, ...}, IMG[], IMG_DATA[{filename,url}], DC, RD, STATUS, LCS[], DS[], PROD[], SOURCE, DETAIL_URL }] }. With enableLitigation=true each matched patent additionally carries litigationStatus(success/skipped/failed) + caseTotal + cases[{ caseId, docketNumber, caseName, court, status, dateFiled, parties[], patentNumbers[], entries[] }] (backed by US PACER litigation data — one call returns patents + lawsuits).
