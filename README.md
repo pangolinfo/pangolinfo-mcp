@@ -2,6 +2,8 @@
 
 > Pangolinfo MCP server — **20 Amazon e-commerce & IP data tools** for AI assistants via [Model Context Protocol](https://modelcontextprotocol.io).
 
+**🔗 Official site: [www.pangolinfo.com](https://www.pangolinfo.com/?sourceTag=mcp_)**
+
 Plug your favorite AI client (Claude Code, Cursor, Cline, Windsurf, Codex, Hermes, OpenClaw) into Pangolinfo's Amazon scrape APIs and let the AI run keyword research, listing analysis, review mining, niche discovery, category navigation, AI search lookups, keyword-trend checks, and WIPO trademark clearance — all from natural-language instructions.
 
 > ⚠️ **BREAKING CHANGE in 0.3.0 — tool renames (no backward-compatible aliases)**
