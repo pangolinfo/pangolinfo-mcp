@@ -31,8 +31,8 @@ const inputSchema = z.object({
     .default("US")
     .describe(
       t({
-        zh: "Amazon 站点 ID。常见值：US、UK、DE、JP、FR、IT、ES、CA。默认 US。",
-        en: "Amazon marketplace id. Common: US, UK, DE, JP, FR, IT, ES, CA. Defaults to US.",
+        zh: "Amazon 站点 ID。⚠️ 后端目前仅支持 US；传其他站点会失败或回退。默认且只用 US。",
+        en: "Amazon marketplace id. ⚠️ Backend currently supports US only; other marketplaces will fail or fall back. Use US (the default).",
       }),
     ),
   timeRange: z

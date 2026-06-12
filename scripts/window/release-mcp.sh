@@ -10,10 +10,12 @@
 #   5. ⏸ 停下,提示你去 ACK 控制台改 image tag 重新部署 (手动,零停机)
 #   6. 你回车确认滚完 → 验证 https://mcp.pangolinfo.com/health 版本对得上
 #   7. 官方 MCP Registry 发布 (mcp-publisher login dns + validate + publish)
+#   8. ⏸ 提示去 Glama admin 点 Build & Release 刷新目录 (手动,无 API)
 #
 # 不做的事 (有意保留人工):
 #   - GitHub commit/push  (commit message 你自己写,或先手动 push 再跑本脚本)
 #   - ACK 点击重新部署    (步骤 5,人工)
+#   - Glama Build&Release (步骤 8,人工 —— Glama 无触发 build 的写 API)
 #
 # 用法:
 #   ./scripts/window/release-mcp.sh 0.6.0
@@ -122,6 +124,34 @@ DNS_KEY=$(tr -d ' \r\n' < "$KEYFILE")
 "$PUBLISHER" validate
 "$PUBLISHER" login dns --domain pangolinfo.com --private-key "$DNS_KEY"
 "$PUBLISHER" publish
+echo "  ✓ 已发布到官方 Registry"
 echo
+
+# ---------- Step 8: Glama 目录刷新 (半自动,需人工点按钮) ----------
+# Glama 的 Tools/schema 不是从 GitHub 文件读的,而是它"实际运行 server 测试"
+# 的结果。它会跟 commit 自动重抓(几分钟~1 天),但若要"立即"刷新 Tools 描述
+# (例如本次版本改了 tool description / locale / 工具增删),必须在 admin 面板
+# 手动点 Build & Release —— Glama 没有提供触发 build 的写 API,只能点按钮。
+#
+# ⚠ 关键:只 Sync(拉 GitHub 文件)刷不动 Tools,必须 Build & Release(重新构建
+#   + 运行 server 测试)才会更新 schema。详见本次排查记录。
+ADMIN_URL="https://glama.ai/mcp/servers/pangolinfo/pangolinfo-mcp/admin/dockerfile"
+echo "── Step 8: Glama 目录刷新 (人工) ──"
+echo "  Tools 表格来自 Glama 运行 server 的测试结果,不是 GitHub 文件。"
+echo "  若本次改了 tool description / 工具增删 / locale,需手动刷新:"
+echo
+echo "    1. 打开: $ADMIN_URL"
+echo "       (需用 maintainer 账号登录;org repo 靠 glama.json 的 maintainers 认领)"
+echo "    2. 确认页面里 git checkout 的 commit = 你刚 push 的最新 commit"
+echo "    3. 点 [Build & Release] —— 用最新代码重新构建 + 跑 server 测试"
+echo "    4. 等 ~15s 测试 success,Schema 页即刷新为最新 tools/描述"
+echo
+echo "  不改 tool 元数据(只改后端逻辑)可跳过 —— Glama 会自动重抓。"
+# 尝试自动打开 admin 页 (WSL 调 Windows 浏览器);失败不影响流程
+( command -v explorer.exe >/dev/null 2>&1 && explorer.exe "$ADMIN_URL" ) 2>/dev/null || \
+  echo "  (没能自动打开浏览器,手动复制上面 URL)"
+echo
+
 echo "✅ 全链路完成。验证收录:"
-echo "   https://registry.modelcontextprotocol.io/v0.1/servers?search=com.pangolinfo/amazon-mcp"
+echo "   - Registry: https://registry.modelcontextprotocol.io/v0.1/servers?search=com.pangolinfo/amazon-mcp"
+echo "   - Glama:    https://glama.ai/mcp/servers/pangolinfo/pangolinfo-mcp/schema"
