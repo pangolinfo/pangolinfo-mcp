@@ -1,7 +1,7 @@
 # Pangolinfo MCP — Tools Map
 
 > 给 AI Agent 和工程师同时看的工具协同图。
-> Live：20（19 业务 + 1 自省 `pangolinfo_capabilities`）。
+> Live：19（18 业务 + 1 自省 `pangolinfo_capabilities`）。
 
 ## 🚀 给 AI 的快速入口
 
@@ -43,11 +43,10 @@
 | `ai_search` | SERP + AI Overview | `query` | 2pt / ~30s |
 | `keyword_trends` | 关键词热度对比 | `keywords[]` | 1.5pt / ~5s |
 
-### ⚖️ IP（2）
+### ⚖️ IP（1）
 | Tool | 一句话 | 必填 | 成本 |
 |---|---|---|---|
-| `wipo_search` | WIPO 全球外观设计/商标 | `source` | 2pt / ~5s |
-| `pacer_search` | 美国专利诉讼案件 + docket 流水 | `patentNumber`/`companyName`/`caseNumber` 三选一 | **12pt/次** / ~3s |
+| `wipo_search` | WIPO 全球外观设计/商标;`enableLitigation=true` 联动美国专利诉讼(原 `pacer_search` 能力) | `source` | 2pt / ~5s（+12 当 `enableLitigation` 查到专利） |
 
 ### 🤖 自省（1）
 | Tool | 一句话 | 必填 | 成本 |
@@ -165,13 +164,14 @@ wipo_search source='CNID' prod='<product>' rd='2024' # 看中国的（必须 nar
 wipo_search source='HAGUE' irn='DM/000298'           # 精确国际注册号
 ```
 
-### ⚖️ WF5b: 专利侵权诉讼闭环（WIPO → PACER）
+### ⚖️ WF5b: 专利侵权诉讼闭环（一次调用）
 ```
-wipo_search source='USID' prod='<product>'           # 先找新品涉及的风险专利号
-  ↓ 取 patentNumber
-pacer_search patentNumber='<from WIPO>'              # 查该专利在美国有没有被诉讼 + 案件进展 + 原被告
+wipo_search source='USID' prod='<product>' enableLitigation=true
+  # 命中专利后自动用专利号联动查美国诉讼（底层 PACER），
+  # 每条命中专利直接带 litigationStatus / caseTotal / cases[]（案件进展、原被告、docket 流水）。
+  # 仅查到专利才 +12 积点。
 ```
-也可直接 pacer_search companyName='<品牌>' 或 caseNumber='<案件号>'。
+注：原独立 `pacer_search` 工具于 2026-06 退役，诉讼能力并入此 `enableLitigation` 参数。
 
 ### 🏪 WF6: 卖家/品牌画像
 ```
@@ -202,7 +202,7 @@ list_seller_products            # 该 seller 的所有商品
 | **免费** | `pangolinfo_capabilities` |
 | **1 pt** | `search_amazon`, `get_amazon_product`, `list_bestsellers`, `list_new_releases`, `list_seller_products`, `list_category_products`, `search_categories`, `get_category_children`, `get_category_paths`, `filter_categories`, `filter_niches` |
 | **1.5 pt** | `search_local_maps`, `keyword_trends` |
-| **2 pt** | `ai_search`, `wipo_search` |
+| **2 pt** | `ai_search`, `wipo_search`（+12 当 `enableLitigation` 查到专利）|
 | **5 pt/页** ⚠️ | `get_amazon_reviews` |
 
 **预算建议**：跑一次 WF1（从 0 选品）保守估计 5-10 pt；加 reviews 挖痛点 +10-30 pt；带 wipo 排查 +2-4 pt。

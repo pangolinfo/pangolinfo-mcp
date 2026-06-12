@@ -1,24 +1,33 @@
 # pangolinfo-mcp
 
-> Pangolinfo MCP server — **20 Amazon e-commerce & IP data tools** for AI assistants via [Model Context Protocol](https://modelcontextprotocol.io).
+> Pangolinfo MCP server — **18 Amazon e-commerce & IP data tools** for AI assistants via [Model Context Protocol](https://modelcontextprotocol.io).
 
 **🔗 Official site: [www.pangolinfo.com](https://www.pangolinfo.com/?sourceTag=mcp_)**
 
 Plug your favorite AI client (Claude Code, Cursor, Cline, Windsurf, Codex, Hermes, OpenClaw) into Pangolinfo's Amazon scrape APIs and let the AI run keyword research, listing analysis, review mining, niche discovery, category navigation, AI search lookups, keyword-trend checks, and WIPO trademark clearance — all from natural-language instructions.
 
-> ⚠️ **BREAKING CHANGE in 0.3.0 — tool renames (no backward-compatible aliases)**
+> ⚠️ **BREAKING CHANGE in 0.7.0 — `pacer_search` retired, merged into `wipo_search`**
+>
+> The standalone `pacer_search` tool was removed. US patent-litigation (PACER) lookups
+> are now reached by passing `enableLitigation=true` to `wipo_search` — it finds the patent
+> and joins the related US litigation cases in a single call. Prompts/scripts pinning
+> `pacer_search` will get `ToolNotFound`; switch to `wipo_search` with `enableLitigation`.
+>
+> <details><summary>Earlier breaking change (0.3.0 — tool renames)</summary>
 >
 > | Old name (≤ 0.2.x) | New name (0.3.0+) |
 > | --- | --- |
 > | `google_ai_search` | `ai_search` |
 > | `google_trends` | `keyword_trends` |
 >
-> Tool names changed to remove third-party brand references from the public MCP interface. Any prompts, SKILLs, or scripts pinning the old names will get `ToolNotFound` after upgrading. Update your prompts to the new names. Tool parameters, return shape, and pricing are unchanged.
+> Tool names changed to remove third-party brand references from the public MCP interface.
+> Tool parameters, return shape, and pricing are unchanged.
+> </details>
 
 | | |
 |---|---|
-| **Version** | `0.7.2` |
-| **Tools** | 20 (19 backend + 1 self-introspection) |
+| **Version** | `0.7.3` |
+| **Tools** | 18 business tools (+ a free local `pangolinfo_capabilities` introspection call) |
 | **Transport** | stdio (local) · streamable HTTP (hosted — see below) |
 | **Runtime** | Node.js 18+ |
 | **License** | MIT |
@@ -257,7 +266,7 @@ If you're calling the endpoint directly (not through a standard MCP client):
 
 ---
 
-## Tools (20)
+## Tools (18)
 
 See [`MCP-TOOLS-MAP.md`](./MCP-TOOLS-MAP.md) for the full coordination graph (which tools chain into which).
 
@@ -276,13 +285,13 @@ See [`MCP-TOOLS-MAP.md`](./MCP-TOOLS-MAP.md) for the full coordination graph (wh
 | 11 | `filter_niches` | Niche discovery (size × competition × growth) | 0.75 |
 | 12 | `get_category_paths` | Resolve full ancestor paths for a category node | 0.75 |
 | 13 | `search_local_maps` | Google Maps local business search | 0.75 |
-| 14 | `wipo_search` | WIPO global design / trademark search (IP clearance) | 2 |
-| 15 | `pacer_search` | US patent-litigation (PACER) case + docket timeline search | 12 |
-| 16 | `ai_search` | AI Search via Google SERP (AI Overview + organic, with compliance disclaimer) | 2 |
-| 17 | `keyword_trends` | Keyword Trends via Google Trends (with compliance disclaimer) | 1.5 |
-| 18 | `scrape_url` | Power-user escape hatch: scrape a raw Amazon URL + parserName (non-standard pages) | 0.75 |
-| 19 | `search_amazon_alexa` | Amazon Rufus AI conversational product picks (scene-based, no keyword) | 6 |
-| 20 | `pangolinfo_capabilities` | Self-introspection — what tools exist, how they chain | **0** (local) |
+| 14 | `wipo_search` | WIPO global design / trademark search (IP clearance). Set `enableLitigation=true` to also join related US patent-litigation (PACER) cases in the same call | 2 (+12 when `enableLitigation` finds a patent) |
+| 15 | `ai_search` | AI Search via Google SERP (AI Overview + organic, with compliance disclaimer) | 2 |
+| 16 | `keyword_trends` | Keyword Trends via Google Trends (with compliance disclaimer) | 1.5 |
+| 17 | `scrape_url` | Power-user escape hatch: scrape a raw Amazon URL + parserName (non-standard pages) | 0.75 |
+| 18 | `search_amazon_alexa` | Amazon Rufus AI conversational product picks (scene-based, no keyword) | 6 |
+
+> **Plus a free local call:** `pangolinfo_capabilities` returns the full tool catalog, canonical workflows, and usage tips with no backend round-trip (**0** credits). It is a self-introspection helper, not one of the 18 data tools.
 
 Default marketplace is **Amazon US** (`marketplaceId=ATVPDKIKX0DER`, `zip=90001`). Override per call via tool arguments.
 
@@ -310,16 +319,20 @@ CLI args win over env vars — convenient when you want per-server keys without 
 
 ## Internationalization
 
-The server returns Chinese descriptions and error hints by default. Set `PANGOLINFO_LANG=en` to switch to English:
+Tool descriptions and error hints are available in **English** and **Chinese**. The
+language is resolved in this order: `--lang=zh|en` → `PANGOLINFO_LANG=zh|en` → OS locale
+(`$LANG` starting with `zh*` → Chinese, otherwise English) → English when there is no
+locale signal at all. So a Chinese-locale machine gets Chinese automatically; everyone
+else gets English. Force a language explicitly:
 
 ```json
 "env": {
   "PANGOLINFO_API_KEY": "pgl_xxxxxxxx",
-  "PANGOLINFO_LANG": "en"
+  "PANGOLINFO_LANG": "zh"
 }
 ```
 
-Startup logs are always English (operator-facing); tool descriptions and error `hint` fields follow `PANGOLINFO_LANG`.
+Startup logs are always English (operator-facing); tool descriptions and error `hint` fields follow the resolved locale.
 
 ---
 
@@ -329,7 +342,7 @@ After restarting your AI client, ask it:
 
 > List all available `pangolinfo` MCP tools.
 
-You should see 20 tools. Then try:
+You should see 18 tools. Then try:
 
 > Use `pangolinfo_capabilities` with mode "summary".
 
@@ -363,7 +376,7 @@ src/
 ├── i18n.ts             zh/en translation lookup
 └── tools/
     ├── _types.ts             Tool / ToolContext type definitions
-    ├── index.ts              Tool registry (20 tools)
+    ├── index.ts              Tool registry (18 tools + capabilities)
     └── <verb_noun>.ts        One file per tool
 ```
 

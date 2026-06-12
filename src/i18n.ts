@@ -59,8 +59,11 @@ export function detectLocale(argv: readonly string[]): Locale {
   const lang = process.env.LANG || process.env.LC_ALL || "";
   if (lang.toLowerCase().startsWith("zh")) return "zh";
   if (lang) return "en";
-  // 4. Product default per CONTRACT-i18n.md §0.
-  return "zh";
+  // 4. No locale signal at all (e.g. clean inspection sandboxes like the
+  //    Glama directory, which run the server with no LANG/PANGOLINFO_LANG):
+  //    default to en so public catalogs show English. Chinese users keep
+  //    zh via $LANG=zh* or explicit PANGOLINFO_LANG=zh. See CONTRACT-i18n.md §0.
+  return "en";
 }
 
 // ---------------------------------------------------------------------------
