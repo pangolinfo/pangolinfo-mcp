@@ -96,6 +96,14 @@ Tips: prefer overview for single queries (cheaper); use ai_mode only when you ne
       url,
       parserName,
       screenshot: input.screenshot,
+      // Google AI rendering is slow: overview ~5s, but ai_mode commonly
+      // runs 60s+ (measured ~61s end-to-end). The scrape backend defaults
+      // to a 60s per-task timeout and will cut the request off mid-render
+      // (observed as an HTTP/2 INTERNAL_ERROR / "connector unavailable"
+      // on the client). Pass an explicit, generous timeout the same way
+      // search_amazon_alexa does, so long ai_mode renders aren't killed at
+      // the 60s default. 180s covers ai_mode + follow-ups with headroom.
+      timeout: 180000,
     };
     if (input.mode === "ai_mode" && input.followups?.length) {
       body.param = input.followups;

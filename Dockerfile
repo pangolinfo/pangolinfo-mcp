@@ -34,7 +34,15 @@ USER node
 
 # HTTP mode by default. Override at runtime with -e PANGOLINFO_TRANSPORT=stdio
 # if you really want to run stdio inside a container (unusual).
+#
+# PANGOLINFO_LANG=en pins the public hosted endpoint to English tool
+# descriptions, independent of the base image's $LANG. Public catalogs
+# (Smithery's gateway, the official registry) scan this endpoint's
+# tools/list; without this pin they inherit whatever locale the container
+# resolves to. Chinese users running stdio locally still get zh via
+# $LANG=zh* or --lang=zh.
 ENV PANGOLINFO_TRANSPORT=http \
+    PANGOLINFO_LANG=en \
     PORT=3000 \
     NODE_ENV=production
 

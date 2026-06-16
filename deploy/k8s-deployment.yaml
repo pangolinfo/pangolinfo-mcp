@@ -41,6 +41,10 @@ spec:
           env:
             - name: PANGOLINFO_TRANSPORT
               value: "http"
+            # Pin public endpoint to English tool descriptions (catalogs
+            # scan tools/list here). Local stdio users keep zh via $LANG.
+            - name: PANGOLINFO_LANG
+              value: "en"
             - name: PORT
               value: "3000"
             - name: NODE_ENV
