@@ -17,6 +17,13 @@ export interface ToolLogger {
 export interface ToolContext {
   client: PangolinfoClient;
   logger: ToolLogger;
+  /**
+   * Last 8 chars of the caller's API key (e.g. "…a1b2c3d4"), used only to
+   * attribute call-log lines to a customer without exposing the full key
+   * or decoding the JWT. Undefined in stdio mode (single user) — the log
+   * line falls back to "stdio".
+   */
+  keyTag?: string;
 }
 
 export interface Tool<TSchema extends z.ZodTypeAny = z.ZodTypeAny> {

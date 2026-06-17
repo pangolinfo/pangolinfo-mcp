@@ -39,11 +39,14 @@ const SITE_TO_DOMAIN: Record<string, string> = {
 const inputSchema = z.object({
   asin: z
     .string()
-    .regex(/^[A-Z0-9]{10}$/, "ASIN must be 10 uppercase letters/digits")
+    .regex(
+      /^[A-Za-z0-9]{10}$/,
+      "ASIN must be 10 letters/digits (case-insensitive; auto-uppercased)",
+    )
     .describe(
       t({
-        zh: "Amazon ASIN（10 位大写字母+数字）。Examples: 'B09B8V1LZ3' / 'B0CRMZHDG8'。",
-        en: "Amazon ASIN (10-char uppercase alphanumeric). Examples: 'B09B8V1LZ3' / 'B0CRMZHDG8'.",
+        zh: "Amazon ASIN（10 位字母+数字，大小写均可，会自动转大写）。Examples: 'B09B8V1LZ3' / 'B0CRMZHDG8'。",
+        en: "Amazon ASIN (10 letters/digits, case-insensitive — auto-uppercased). Examples: 'B09B8V1LZ3' / 'B0CRMZHDG8'.",
       }),
     ),
   site: z
@@ -134,10 +137,13 @@ Tips: filterByStar = all_stars / five_star ... one_star / positive / critical; s
   }),
   inputSchema,
   async execute(input, ctx) {
+    // See get_amazon_product: backend doesn't validate ASIN format; upper-case
+    // here so a lowercased asin from the agent still resolves.
+    const asin = input.asin.toUpperCase();
     const domain = SITE_TO_DOMAIN[input.site];
     const url = `https://${domain}`;
     ctx.logger.info(
-      `get_amazon_reviews: asin=${input.asin} site=${input.site} pageCount=${input.pageCount} filter=${input.filterByStar} sort=${input.sortBy} mediaType=${input.mediaType}`,
+      `get_amazon_reviews: asin=${asin} site=${input.site} pageCount=${input.pageCount} filter=${input.filterByStar} sort=${input.sortBy} mediaType=${input.mediaType}`,
     );
     return ctx.client.post("/api/v1/scrape", {
       url,
@@ -145,7 +151,7 @@ Tips: filterByStar = all_stars / five_star ... one_star / positive / critical; s
       bizContext: {
         bizKey: "review",
         pageCount: input.pageCount,
-        asin: input.asin,
+        asin,
         filterByStar: input.filterByStar,
         sortBy: input.sortBy,
         ...(input.zipcode ? { zipcode: input.zipcode } : {}),

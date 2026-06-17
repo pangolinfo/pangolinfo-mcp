@@ -26,11 +26,14 @@ import { t } from "../i18n.js";
 const inputSchema = z.object({
   asin: z
     .string()
-    .regex(/^[A-Z0-9]{10}$/, "ASIN must be 10 uppercase letters/digits")
+    .regex(
+      /^[A-Za-z0-9]{10}$/,
+      "ASIN must be 10 letters/digits (case-insensitive; auto-uppercased)",
+    )
     .describe(
       t({
-        zh: "Amazon ASIN，10 位大写字母+数字。Examples: 'B09B8V1LZ3' (Echo Dot 5) / 'B0CRMZHDG8' (Stanley Quencher) / 'B0BDHWDR12' (AirPods Pro 2)。",
-        en: "Amazon ASIN, 10 chars uppercase. Examples: 'B09B8V1LZ3' (Echo Dot 5) / 'B0CRMZHDG8' (Stanley Quencher) / 'B0BDHWDR12' (AirPods Pro 2).",
+        zh: "Amazon ASIN，10 位字母+数字（大小写均可，会自动转大写）。Examples: 'B09B8V1LZ3' (Echo Dot 5) / 'B0CRMZHDG8' (Stanley Quencher) / 'B0BDHWDR12' (AirPods Pro 2)。",
+        en: "Amazon ASIN, 10 letters/digits (case-insensitive — auto-uppercased). Examples: 'B09B8V1LZ3' (Echo Dot 5) / 'B0CRMZHDG8' (Stanley Quencher) / 'B0BDHWDR12' (AirPods Pro 2).",
       }),
     ),
   site: z
@@ -110,10 +113,16 @@ Cost: ~1 point/call, ~5s.`,
   }),
   inputSchema,
   async execute(input, ctx) {
+    // Normalize to uppercase: the backend does not validate ASIN format
+    // (it's a passthrough List<String>), and Amazon's /dp/ canonical form
+    // is uppercase. Agents frequently pass a lowercased asin copied from a
+    // URL; upper-casing here avoids a needless miss without a stricter
+    // schema that would reject the lowercase outright.
+    const asin = input.asin.toUpperCase();
     const domain = SITE_TO_DOMAIN[input.site];
-    const url = `https://${domain}/dp/${input.asin}`;
+    const url = `https://${domain}/dp/${asin}`;
     ctx.logger.info(
-      `get_amazon_product: asin=${input.asin} site=${input.site} format=${input.format} url=${url}`,
+      `get_amazon_product: asin=${asin} site=${input.site} format=${input.format} url=${url}`,
     );
     // `parserName` is only honored by the backend when `format=json`;
     // sending it for markdown is harmless but unnecessary. Always pair

@@ -117,6 +117,7 @@ export function loadAuth(argv: readonly string[] = process.argv.slice(2)): Resol
         "  1. 运行 installer（推荐）：会写入 ~/.pangolinfo/config.json",
         "  2. 设置环境变量：PANGOLINFO_API_KEY=pgl_xxxxxxxx",
         "  3. 通过命令行参数：--api-key=pgl_xxxxxxxx（适合 mcp.json 配置）",
+        `如还没有 API Key，请到 ${CONFIG.WEBSITE_URL} 登录后在控制台获取。`,
       ].join("\n"),
     );
   }

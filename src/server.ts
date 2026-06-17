@@ -30,6 +30,7 @@ import {
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import { zodToJsonSchema } from "zod-to-json-schema";
+import { z, ZodError } from "zod";
 
 // NOTE: i18n MUST be imported before tools/index — the i18n module
 // auto-detects locale in a top-level IIFE so that tool files (which
@@ -88,22 +89,64 @@ function buildServer(ctx: ToolContext): Server {
   }));
 
   server.setRequestHandler(CallToolRequestSchema, async (req) => {
-    const tool = toolsByName.get(req.params.name);
+    const reqId = nextReqId();
+    const keyTag = ctx.keyTag ?? "stdio";
+    const toolName = req.params.name;
+    const rawArgs = req.params.arguments ?? {};
+    const startedAt = process.hrtime.bigint();
+
+    const tool = toolsByName.get(toolName);
     if (!tool) {
+      logCall({ reqId, keyTag, tool: toolName, args: rawArgs, ms: 0, code: "BAD_INPUT" });
       return {
         isError: true,
         content: [
           {
             type: "text" as const,
-            text: `[BAD_INPUT] Unknown tool: ${req.params.name}`,
+            text: `[BAD_INPUT] Unknown tool: ${toolName}`,
+          },
+        ],
+      };
+    }
+
+    // Validate input ourselves (safeParse) so a schema failure becomes a
+    // human-readable [BAD_INPUT] the AI can act on — naming the offending
+    // field, the rule it broke, and the field's own description — instead
+    // of a raw ZodError JSON blob the AI can't parse into a fix.
+    const validation = tool.inputSchema.safeParse(rawArgs);
+    if (!validation.success) {
+      logCall({
+        reqId,
+        keyTag,
+        tool: toolName,
+        args: rawArgs,
+        ms: elapsedMs(startedAt),
+        code: "BAD_INPUT",
+      });
+      return {
+        isError: true,
+        content: [
+          {
+            type: "text" as const,
+            text:
+              `[BAD_INPUT] ${formatZodError(validation.error, tool)}\n` +
+              `${hintFor("BAD_INPUT")}\n(retriable=no)\n(ref=${reqId})`,
           },
         ],
       };
     }
 
     try {
-      const parsed = tool.inputSchema.parse(req.params.arguments ?? {});
+      const parsed = validation.data;
       const result = await tool.execute(parsed, ctx);
+      logCall({
+        reqId,
+        keyTag,
+        tool: toolName,
+        args: rawArgs,
+        ms: elapsedMs(startedAt),
+        code: "OK",
+      });
       return {
         content: [
           {
@@ -116,22 +159,142 @@ function buildServer(ctx: ToolContext): Server {
         ],
       };
     } catch (err) {
-      return toErrorEnvelope(err, tool.name);
+      const code = err instanceof PangolinfoError ? err.code : "BAD_INPUT";
+      logCall({
+        reqId,
+        keyTag,
+        tool: toolName,
+        args: rawArgs,
+        ms: elapsedMs(startedAt),
+        code,
+      });
+      return toErrorEnvelope(err, toolName, reqId);
     }
   });
 
   return server;
 }
 
-function toErrorEnvelope(err: unknown, toolName: string) {
+// ---------------------------------------------------------------------------
+// Structured call logging. One JSON line per tool invocation to stderr, which
+// in HTTP mode lands in the pod log (kubectl logs / log platform). Lets us
+// answer "which customer called which tool with what args, and what happened"
+// when a user reports a problem — the gap that made support triage painful.
+//
+// `reqId` correlates the MCP-side log line with the backend's own
+// ThirdPartyApiCallLog (billing) record. Args are logged in FULL (not
+// truncated) per product decision — payloads here carry no secrets.
+// ---------------------------------------------------------------------------
+
+let reqCounter = 0;
+function nextReqId(): string {
+  // Monotonic per-process id. Avoids Date.now()/Math.random() (unavailable
+  // in some sandboxes) and is enough to correlate within a pod's lifetime.
+  reqCounter += 1;
+  return `r${reqCounter.toString(36)}`;
+}
+
+function elapsedMs(startedAt: bigint): number {
+  return Number((process.hrtime.bigint() - startedAt) / 1_000_000n);
+}
+
+interface CallLogFields {
+  reqId: string;
+  keyTag: string;
+  tool: string;
+  args: unknown;
+  ms: number;
+  code: string;
+}
+
+function logCall(f: CallLogFields): void {
+  let line: string;
+  try {
+    line = JSON.stringify({
+      t: "call",
+      reqId: f.reqId,
+      key: f.keyTag,
+      tool: f.tool,
+      args: f.args,
+      ms: f.ms,
+      code: f.code,
+    });
+  } catch {
+    // args may contain a circular structure (shouldn't, but be safe) —
+    // never let logging throw and break the actual tool response.
+    line = JSON.stringify({
+      t: "call",
+      reqId: f.reqId,
+      key: f.keyTag,
+      tool: f.tool,
+      args: "[unserializable]",
+      ms: f.ms,
+      code: f.code,
+    });
+  }
+  process.stderr.write(`${line}\n`);
+}
+
+/**
+ * Render a ZodError into AI-actionable text. For each failing field:
+ *   - the dotted path (`followups[2]`, `nicheTitle`)
+ *   - Zod's own rule message ("ASIN must be 10 ...", "Invalid enum value ...")
+ *   - the field's `.describe()` so the AI sees what a VALID value looks like
+ *
+ * All content comes from the tool's schema itself — no rules invented here.
+ * If the schema's constraint changes, this text changes with it.
+ */
+function formatZodError(error: ZodError, tool: Tool): string {
+  // Pull the per-field description map from the tool's top-level object
+  // shape. Tools all use z.object({...}) with .describe() on each field.
+  const shape =
+    tool.inputSchema instanceof z.ZodObject
+      ? (tool.inputSchema.shape as Record<string, z.ZodTypeAny>)
+      : {};
+
+  const lines = error.issues.map((issue) => {
+    const pathStr = issue.path.length ? issue.path.join(".") : "(root)";
+    const topField = issue.path[0];
+    let descHint = "";
+    if (typeof topField === "string" && shape[topField]) {
+      const desc = shape[topField].description;
+      if (desc) {
+        // Keep it short — first sentence / up to ~140 chars — so a long
+        // bilingual describe doesn't drown the actual error.
+        const firstSentence = desc.split(/[。.\n]/)[0]?.trim() ?? "";
+        const clipped =
+          firstSentence.length > 140
+            ? `${firstSentence.slice(0, 140)}…`
+            : firstSentence;
+        if (clipped) descHint = `（该参数说明：${clipped}）`;
+      }
+    }
+    return `参数 ${pathStr}：${issue.message}${descHint}`;
+  });
+
+  return (
+    `${tool.name} 入参校验失败 / invalid arguments：\n` +
+    lines.map((l) => `  • ${l}`).join("\n")
+  );
+}
+
+function toErrorEnvelope(err: unknown, toolName: string, reqId?: string) {
+  // A trailing reference line lets a confused user quote `ref=…` to support,
+  // which we can grep against the call log. Omitted when no reqId (defensive).
+  const ref = reqId ? `\n(ref=${reqId})` : "";
+
   if (err instanceof PangolinfoError) {
     logger.error(`tool ${toolName} failed [${err.code}]`, err);
+    // Line 1: [CODE] + human-first message. Line 2: hint with retry guidance
+    // + user action. Line 3: an explicit retriable flag so the AI doesn't have
+    // to infer whether to retry.
+    const retry = err.retriable ? "retriable=yes" : "retriable=no";
     return {
       isError: true,
       content: [
         {
           type: "text" as const,
-          text: `[${err.code}] ${err.message}\n${hintFor(err.code)}`,
+          text: `[${err.code}] ${err.message}\n${hintFor(err.code)}\n(${retry})${ref}`,
         },
       ],
     };
@@ -147,7 +310,7 @@ function toErrorEnvelope(err: unknown, toolName: string) {
     content: [
       {
         type: "text" as const,
-        text: `[BAD_INPUT] ${message}`,
+        text: `[BAD_INPUT] ${message}\n${hintFor("BAD_INPUT")}\n(retriable=no)${ref}`,
       },
     ],
   };
@@ -340,12 +503,22 @@ async function startHttp(): Promise<void> {
 
     const apiKey = extractApiKey(req);
     if (!apiKey) {
+      // Connection-layer AUTH failure (no key reached the server at all).
+      // This is the "mcp 服务连接错误 / 401" customers see before any tool
+      // runs. Give the AI the same structured shape it gets from tool
+      // errors: a class, an explicit non-retriable flag, and a concrete
+      // user action with the website URL.
       writeJson(res, 401, {
         error: "AUTH",
+        retriable: false,
         message:
-          "API key required. Pass via ?api_key=pgl_xxx in the URL or " +
-          "Authorization: Bearer pgl_xxx header. " +
-          "Get a key at https://extapi.pangolinfo.com.",
+          "未提供 API Key —— 请求未携带凭据，重试无用。" +
+          "Missing API key. The request carried no credentials; retrying will not help.",
+        hint:
+          `请在 MCP 配置里加上 API Key(URL 加 ?api_key=pgl_xxx,或 HTTP 头 Authorization: Bearer pgl_xxx),` +
+          `然后重启/重新连接本 MCP 服务使其生效 —— 配置不会热加载。没有 Key 请到 ${CONFIG.WEBSITE_URL} 登录获取。 / ` +
+          `Add the key in your MCP config (?api_key=pgl_xxx in the URL, or an ` +
+          `Authorization: Bearer pgl_xxx header), then restart/reconnect this MCP server for it to take effect — config is not hot-reloaded. Get a key at ${CONFIG.WEBSITE_URL}.`,
       });
       return;
     }
@@ -368,7 +541,11 @@ async function startHttp(): Promise<void> {
       apiKey,
       baseUrl: scrapeBase,
     });
-    const ctx: ToolContext = { client, logger: requestLogger };
+    const ctx: ToolContext = {
+      client,
+      logger: requestLogger,
+      keyTag: `…${apiKey.slice(-8)}`,
+    };
     const server = buildServer(ctx);
 
     // Stateless transport: no sessionId, each request is independent.
@@ -393,7 +570,11 @@ async function startHttp(): Promise<void> {
       if (!res.headersSent) {
         writeJson(res, 500, {
           error: "SERVER",
-          message: err instanceof Error ? err.message : String(err),
+          retriable: true,
+          message:
+            "MCP 服务端临时错误,通常可重试。 / " +
+            "Transient MCP server error, usually retriable. " +
+            (err instanceof Error ? err.message : String(err)),
         });
       }
     }
