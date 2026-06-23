@@ -64,17 +64,17 @@ export const aiSearch: Tool<typeof inputSchema> = {
   name: "ai_search",
   description: t({
     zh: `[AI Search via Google SERP] 抓取 Google 公开搜索结果(数据来源:Google,使用须遵守 Google 服务条款)，含顶部 AI Overview 摘要、organic 自然位、相关搜索词。两种模式：overview（标准 SERP）/ ai_mode（沉浸式对话，支持多轮追问）。
-Use when: 用户说"Google 搜一下""外部需求""市场上人们怎么说 X""Reddit/Quora 上的痛点""AI 搜索时代我的内容能被引用吗""为某关键词找用户原声"；选品 SOP 里的"消费者原声"步骤；判断新品概念在 Amazon 站外是否有真实需求。
+Use when: 用户说"Google 搜一下""外部需求""市场上人们怎么说 X""Reddit/Quora 上的痛点""AI 搜索时代我的内容能被引用吗""为某关键词找用户原声"；选品 SOP 里的"消费者原声"步骤；判断新品概念在 Amazon 站外是否有真实需求；**看竞品在 Google 投了哪些购物广告 / 广告商品落地页**（走 sponsered 块）。
 Don't use: 想在 Amazon 站内搜（用 search_amazon）；只要趋势曲线（用 keyword_trends，更便宜更聚焦）。
-Returns: data.{ results_num, ai_overview, json.items[ { type:'ai_overview', items:[{content:[...], references:[{title,url,domain}]}] }, { type:'organic', items:[{title,url,text}] }, { type:'related_searches', items:[...] } ], screenshot, taskId }。
-Pair with: ↑ query 由用户提问推导；mode='ai_mode' 时传 followups[1..5] 做多轮追问；↓ ai_overview.references[].url 可作外部权威源，organic 结果可喂下游做内容竞争分析。
+Returns: data.{ results_num, ai_overview, json.items[ { type:'ai_overview', items:[{content:[...], references:[{title,url,domain}]}] }, { type:'organic', items:[{title,url,text}] }, { type:'related_searches', items:[...] }, { type:'sponsered', items:[{type:'product', url, title_of_page}] } ], screenshot, taskId }。⚠️ 广告商品块上游 type 拼写就是 'sponsered'（少一个 o，非笔误，按原样匹配，别用 'sponsored' 去找）——含 Google Shopping 购物广告的落地页 url + 商品标题。
+Pair with: ↑ query 由用户提问推导；mode='ai_mode' 时传 followups[1..5] 做多轮追问；↓ ai_overview.references[].url 可作外部权威源，organic 结果可喂下游做内容竞争分析，sponsered[].url 可看竞品付费投放的商品与落地页。
 Cost: ~2 积点/次, ~30s（**慢**——这是 Google AI 渲染时间）。
 Tips: 单次查询用 overview 更经济；只有要"拆解复杂问题 + 连续追问"时才上 ai_mode。followups 超 5 条响应明显变慢。`,
     en: `[AI Search via Google SERP] Scrape publicly-available Google search results (data source: Google; use must comply with Google Terms of Service) with top AI Overview, organic results, and related searches. Two modes: overview (standard SERP) / ai_mode (immersive multi-turn conversational search).
-Use when: user says "Google for me" / "external demand" / "what do people say about X" / "Reddit/Quora pain points" / "will my content be cited in AI search" / "find user complaints for keyword X"; "consumer voice" step in scouting SOPs; verifying whether a new product concept has off-Amazon demand.
+Use when: user says "Google for me" / "external demand" / "what do people say about X" / "Reddit/Quora pain points" / "will my content be cited in AI search" / "find user complaints for keyword X"; "consumer voice" step in scouting SOPs; verifying whether a new product concept has off-Amazon demand; **see which Google Shopping ads competitors run / their ad landing pages** (the sponsered block).
 Don't use: for on-Amazon search (use search_amazon); when only the trend curve matters (use keyword_trends — cheaper and tighter).
-Returns: data.{ results_num, ai_overview, json.items[ { type:'ai_overview', items:[{content:[...], references:[{title,url,domain}]}] }, { type:'organic', items:[{title,url,text}] }, { type:'related_searches', items:[...] } ], screenshot, taskId }.
-Pair with: ↑ query inferred from user; in 'ai_mode' pass followups[1..5] for multi-turn; ↓ ai_overview.references[].url for authoritative external sources, organic items for content-competition analysis.
+Returns: data.{ results_num, ai_overview, json.items[ { type:'ai_overview', items:[{content:[...], references:[{title,url,domain}]}] }, { type:'organic', items:[{title,url,text}] }, { type:'related_searches', items:[...] }, { type:'sponsered', items:[{type:'product', url, title_of_page}] } ], screenshot, taskId }. ⚠️ The ad block's upstream type is literally spelled 'sponsered' (missing an o — not a typo on our side; match it verbatim, do NOT look for 'sponsored') — it carries Google Shopping ad landing-page url + product titles.
+Pair with: ↑ query inferred from user; in 'ai_mode' pass followups[1..5] for multi-turn; ↓ ai_overview.references[].url for authoritative external sources, organic items for content-competition analysis, sponsered[].url for competitors' paid product placements and landing pages.
 Cost: ~2 points/call, ~30s (**slow** — Google AI render time).
 Tips: prefer overview for single queries (cheaper); use ai_mode only when you need decomposed multi-turn investigation. Followups > 5 visibly slow down responses.`,
   }),
