@@ -1,4 +1,4 @@
-{
+﻿{
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "com.pangolinfo/amazon-mcp",
   "description": "Amazon data MCP: products, reviews, niches, WIPO design/IP + US litigation, AI search & trends.",
@@ -6,7 +6,7 @@
     "url": "https://github.com/pangolinfo/pangolinfo-mcp",
     "source": "github"
   },
-  "version": "0.7.4",
+  "version": "0.7.5",
   "remotes": [
     {
       "type": "streamable-http",
