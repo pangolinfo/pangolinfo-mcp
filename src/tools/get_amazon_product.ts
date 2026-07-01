@@ -101,13 +101,13 @@ export const getAmazonProduct: Tool<typeof inputSchema> = {
     zh: `[Amazon 单品详情] 按 ASIN 抓某个具体商品的完整 PDP 数据。
 Use when: 用户给了具体 ASIN（B0XXXXXXXX）要"看一下这个产品""查它的价格/评分/卖家""分析这个竞品"；或 SOP 中拿到候选 ASIN 后需要深拆。
 Don't use: 一次想看多个商品的简要对比（用 search_amazon 或 list_* 系列拿列表）；只要评论（用 get_amazon_reviews 更专一便宜）。
-Returns (format='json', 默认): data.json[0].data.results[0] = { asin, title, price, star, rating, brand, seller{name,id}, parentAsin, ratingDistribution[], aiReviewsSummary, bestSellersRankItems, reviews[{date,star,content,helpful,...}], productOverview[], features[], productDescription[], images[], variantDetails[], attributes[], category_id, breadCrumbs, ... } — 30+ 字段（含 variantDetails 简表）。
+Returns (format='json', 默认): data.json[0].data.results[0] = { asin, title, price, star, rating, brand, seller{name,id}, parentAsin, shippingFee（买家配送料数字，如 "750"；免运费/无信息为 "0"，随 zipcode 对应地址变化）, ratingDistribution[], aiReviewsSummary, bestSellersRankItems, reviews[{date,star,content,helpful,...}], productOverview[], features[], productDescription[], images[], variantDetails[], attributes[], category_id, breadCrumbs, ... } — 30+ 字段（含 variantDetails 简表）。
 Pair with: ↑ asin 常来自 search_amazon / list_bestsellers / filter_niches；↓ 同一 asin 喂 get_amazon_reviews 取更多评论（默认 PDP 只带 5-10 条 reviews）。
 Cost: ~1 积点/次, ~5s。`,
     en: `[Amazon single-product detail] Scrape the full PDP for one ASIN.
 Use when: user supplies a specific ASIN ("look at B0XXXXXXXX" / "check this product's price/rating/seller" / "analyse this competitor"); or as a SOP step after candidate ASINs are picked.
 Don't use: for many products at once (use search_amazon or list_* series for lists); for reviews only (use get_amazon_reviews — cheaper and more focused).
-Returns (format='json', default): data.json[0].data.results[0] = { asin, title, price, star, rating, brand, seller{name,id}, parentAsin, ratingDistribution[], aiReviewsSummary, bestSellersRankItems, reviews[{date,star,content,helpful,...}], productOverview[], features[], productDescription[], images[], variantDetails[], attributes[], category_id, breadCrumbs, ... } — 30+ fields (variantDetails summary included).
+Returns (format='json', default): data.json[0].data.results[0] = { asin, title, price, star, rating, brand, seller{name,id}, parentAsin, shippingFee (buyer shipping fee as a number, e.g. "750"; "0" when free shipping or no info, varies by the zipcode address), ratingDistribution[], aiReviewsSummary, bestSellersRankItems, reviews[{date,star,content,helpful,...}], productOverview[], features[], productDescription[], images[], variantDetails[], attributes[], category_id, breadCrumbs, ... } — 30+ fields (variantDetails summary included).
 Pair with: ↑ asin typically comes from search_amazon / list_bestsellers / filter_niches; ↓ feed the same asin into get_amazon_reviews for more reviews (the PDP carries only ~5-10).
 Cost: ~1 point/call, ~5s.`,
   }),
