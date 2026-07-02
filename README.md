@@ -295,6 +295,27 @@ See [`MCP-TOOLS-MAP.md`](./MCP-TOOLS-MAP.md) for the full coordination graph (wh
 
 Default marketplace is **Amazon US** (`marketplaceId=ATVPDKIKX0DER`, `zip=90001`). Override per call via tool arguments.
 
+### ⏱️ Slow tools & your client's tool-call timeout
+
+Two tools legitimately run long because they wait on live AI generation:
+
+| Tool | Typical latency | Worst case |
+|---|---|---|
+| `search_amazon_alexa` (Rufus) | **60–90s** per prompt | >200s for multiple prompts |
+| `ai_search` | ~30s | ~60s |
+
+Most MCP clients enforce a **per-tool-call timeout — often 60 seconds of silence** — and abort the call if nothing comes back in time. When that happens the client reports a transport-level timeout/disconnect, and the agent mistakes it for **"the tool is unavailable/broken."** This is the usual reason `search_amazon_alexa` gets flagged as unavailable — it reliably crosses the silent 60s line.
+
+Two things keep this from happening:
+
+1. **The server emits progress heartbeats.** While a tool runs, the server sends a `notifications/progress` every 15s **if your client included a `progressToken` in the call**. Spec-compliant clients reset their idle timeout on each heartbeat, so the whole 60–90s render stays under the wire. Most modern MCP clients send a `progressToken` automatically — no action needed.
+
+2. **Raise the client timeout for clients that don't honor progress.** If your client has no `progressToken` support or a hard cap, bump its MCP tool-call timeout to **≥120s** before using `search_amazon_alexa`. Where to set it depends on the client (examples):
+   - **Claude Code / config-based clients:** raise the MCP request/tool timeout in the client config.
+   - **Custom SDK clients:** pass a larger `timeout` (and, ideally, a `progressToken`) in the `callTool` request options.
+
+Also prefer **exactly one prompt per `search_amazon_alexa` call** — multiple prompts stack latency linearly and make the timeout far more likely.
+
 ---
 
 ## Auth resolution order

@@ -88,7 +88,7 @@ function buildServer(ctx: ToolContext): Server {
     })),
   }));
 
-  server.setRequestHandler(CallToolRequestSchema, async (req) => {
+  server.setRequestHandler(CallToolRequestSchema, async (req, extra) => {
     const reqId = nextReqId();
     const keyTag = ctx.keyTag ?? "stdio";
     const toolName = req.params.name;
@@ -136,6 +136,51 @@ function buildServer(ctx: ToolContext): Server {
       };
     }
 
+    // Progress heartbeat for slow tools (search_amazon_alexa/Rufus ~60-90s,
+    // ai_search ~30s). MANY MCP clients enforce a per-tool-call timeout —
+    // often 60s of SILENCE — and abort the call when nothing comes back in
+    // time. The client then surfaces a transport-level timeout/disconnect,
+    // NOT our structured [NETWORK] envelope, and the agent concludes the
+    // tool is "unavailable/broken". This is exactly why alexa keeps getting
+    // flagged as unavailable: it reliably crosses that silent 60s line.
+    //
+    // The MCP spec says a request MAY receive progress notifications while
+    // it runs, and spec-compliant clients RESET their idle timeout on each
+    // one. So we emit a heartbeat every HEARTBEAT_MS to keep the client's
+    // timer alive for the whole 60-90s render.
+    //
+    // We only heartbeat when the caller opted in by sending a
+    // `progressToken` (per spec — progress is unsolicited otherwise). A
+    // caller with no progressToken and a hard 60s cap can't be saved from
+    // here; that's what the doc'd client-timeout requirement covers.
+    const progressToken = extra?._meta?.progressToken;
+    const HEARTBEAT_MS = 15_000;
+    let heartbeat: ReturnType<typeof setInterval> | undefined;
+    if (progressToken !== undefined) {
+      let ticks = 0;
+      heartbeat = setInterval(() => {
+        ticks += 1;
+        // progress/total omitted deliberately: these scrapes have no
+        // knowable completion fraction. An ever-increasing `progress` with
+        // no `total` is the spec-blessed "still working, unknown ETA" shape
+        // and is enough to reset the client's idle timer.
+        void extra
+          .sendNotification({
+            method: "notifications/progress",
+            params: {
+              progressToken,
+              progress: ticks,
+              message: `${toolName} still running (${ticks * (HEARTBEAT_MS / 1000)}s)…`,
+            },
+          })
+          .catch(() => {
+            // A failed heartbeat must never break the actual tool call.
+          });
+      }, HEARTBEAT_MS);
+      // Don't let the heartbeat keep the process alive on its own.
+      heartbeat.unref?.();
+    }
+
     try {
       const parsed = validation.data;
       const result = await tool.execute(parsed, ctx);
@@ -169,6 +214,10 @@ function buildServer(ctx: ToolContext): Server {
         code,
       });
       return toErrorEnvelope(err, toolName, reqId);
+    } finally {
+      // Stop the heartbeat regardless of success/failure so we never leak
+      // an interval or keep pinging a client after the call has returned.
+      if (heartbeat) clearInterval(heartbeat);
     }
   });
 
