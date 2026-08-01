@@ -20,20 +20,30 @@ import { z } from "zod";
 import type { Tool } from "./_types.js";
 import { t } from "../i18n.js";
 
-const SITE_TO_DOMAIN: Record<string, string> = {
+const REVIEW_SUPPORTED_SITES = [
+  "amz_us",
+  "amz_de",
+  "amz_uk",
+  "amz_au",
+  "amz_mx",
+  "amz_in",
+  "amz_eg",
+  "amz_ae",
+  "amz_ca",
+] as const;
+
+type ReviewSite = (typeof REVIEW_SUPPORTED_SITES)[number];
+
+const SITE_TO_DOMAIN: Record<ReviewSite, string> = {
   amz_us: "www.amazon.com",
-  amz_uk: "www.amazon.co.uk",
   amz_de: "www.amazon.de",
-  amz_jp: "www.amazon.co.jp",
-  amz_fr: "www.amazon.fr",
-  amz_it: "www.amazon.it",
-  amz_es: "www.amazon.es",
-  amz_ca: "www.amazon.ca",
+  amz_uk: "www.amazon.co.uk",
   amz_au: "www.amazon.com.au",
-  amz_sa: "www.amazon.sa",
-  amz_ae: "www.amazon.ae",
-  amz_br: "www.amazon.com.br",
   amz_mx: "www.amazon.com.mx",
+  amz_in: "www.amazon.in",
+  amz_eg: "www.amazon.eg",
+  amz_ae: "www.amazon.ae",
+  amz_ca: "www.amazon.ca",
 };
 
 const inputSchema = z.object({
@@ -49,9 +59,7 @@ const inputSchema = z.object({
         en: "Amazon ASIN (10 letters/digits, case-insensitive — auto-uppercased). Examples: 'B09B8V1LZ3' / 'B0CRMZHDG8'.",
       }),
     ),
-  site: z
-    .enum(["amz_us", "amz_uk", "amz_de", "amz_jp", "amz_fr", "amz_it", "amz_es", "amz_ca", "amz_au", "amz_sa", "amz_ae", "amz_br", "amz_mx"])
-    .default("amz_us")
+  site: z.enum(REVIEW_SUPPORTED_SITES).default("amz_us")
     .describe(
       t({
         zh: "Amazon 站点。默认 amz_us。",
