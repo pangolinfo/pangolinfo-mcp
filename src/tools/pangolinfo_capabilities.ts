@@ -25,8 +25,8 @@ const inputSchema = z.object({
     .default("summary")
     .describe(
       t({
-        zh: "'summary' 返回工具清单 + 典型链路（默认，省 token）；'full' 把 17 个 tool 的完整 description 也一并展开（约 8KB，第一次接入或上下文不紧时用）。",
-        en: "'summary' returns tool catalog + canonical workflows (default, token-light); 'full' also expands the full description of every tool (~8KB — use on first integration or when context budget allows).",
+        zh: "'summary' 返回工具清单 + 典型链路（默认，省 token）；'full' 把 20 个 tool 的完整 description 也一并展开（第一次接入或上下文不紧时用）。",
+        en: "'summary' returns tool catalog + canonical workflows (default, token-light); 'full' also expands all 20 tool descriptions (use on first integration or when context budget allows).",
       }),
     ),
 });
@@ -55,6 +55,15 @@ const TOOL_META: ToolMeta[] = [
     oneLiner: {
       zh: "按 ASIN 抓单品完整 PDP",
       en: "Full PDP scrape by ASIN",
+    },
+  },
+  {
+    name: "get_amazon_delivery_time",
+    cost: "2pt/~5s",
+    domain: "amazon",
+    oneLiner: {
+      zh: "完整 Listing 详情 + 地址相关配送时效",
+      en: "Full listing detail plus address-dependent delivery estimates",
     },
   },
   {

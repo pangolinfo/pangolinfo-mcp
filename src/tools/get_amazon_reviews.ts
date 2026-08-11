@@ -6,6 +6,7 @@
  *
  * Verified 2026-05-19 against scrapeapi prod with ASIN B09B8V1LZ3:
  *   - Synchronous response (no callback needed)
+ *   - data.json[0].data.totalReviews — total review count (string)
  *   - data.json[0].data.results[] — each review with
  *     { reviewId, date, country, star, author, authorId, authorLink,
  *       title, content, imgs, videos, purchased, vineVoice, helpful,
@@ -131,14 +132,14 @@ export const getAmazonReviews: Tool<typeof inputSchema> = {
     zh: `[Amazon 评论批量抓取] 翻页拉某 ASIN 的真实买家评论。可按星级/排序/媒体类型过滤。
 Use when: 用户说"看一下 X 的差评""挖痛点""分析竞品评论""做 VOC""为 Listing 找用户原声"；或新品立项前差评扫描；或 listing 优化要找改进点。
 Don't use: 只看 PDP 自带的几条评论摘要（用 get_amazon_product，里面已含 5-10 条 reviews 和 aiReviewsSummary，对快速判断已经够）；做关键词搜索（用 search_amazon）。
-Returns: data.json[0].data.results[{ reviewId, date, country, star, title, content, author, authorId, authorLink, imgs[], videos, purchased, vineVoice, helpful, attributes }] — 1 页约 10 条评论。
+Returns: data.json[0].data = { totalReviews（商品评论总数，无信息时为空串）, results[{ reviewId, date, country, star, title, content, author, authorId, authorLink, imgs[], videos, purchased, vineVoice, helpful, attributes }] } — 1 页约 10 条评论。
 Pair with: ↑ asin 常来自 search_amazon / get_amazon_product / list_bestsellers；↓ 评论文本可直接给 LLM 做痛点聚类、关键词提取。
 Cost: **10 积点/页**（贵）。建议先 pageCount=1 探一下，确认有数据再 pageCount=3~5 扩量。filterByStar='critical' 优先（差评信号密度最高）。
 Tips: filterByStar 取值 = all_stars / five_star ... one_star / positive / critical；sortBy = recent (默认) | helpful；mediaType = all_contents (默认) | media_reviews_only (带图带视频，真实度更高)。`,
     en: `[Amazon review batch scrape] Page-fetch real buyer reviews for an ASIN. Filterable by star / sort / media type.
 Use when: user says "look at X's negative reviews" / "mine pain points" / "analyse competitor reviews" / "do VOC" / "find user complaints for Listing copy"; or pre-launch critical-review scan; or finding improvement points for listing optimization.
 Don't use: when the few reviews already in the PDP would suffice (get_amazon_product carries 5-10 reviews + aiReviewsSummary — enough for a quick read); for keyword search (use search_amazon).
-Returns: data.json[0].data.results[{ reviewId, date, country, star, title, content, author, authorId, authorLink, imgs[], videos, purchased, vineVoice, helpful, attributes }] — ~10 reviews per page.
+Returns: data.json[0].data = { totalReviews (total review count; empty when unavailable), results[{ reviewId, date, country, star, title, content, author, authorId, authorLink, imgs[], videos, purchased, vineVoice, helpful, attributes }] } — ~10 reviews per page.
 Pair with: ↑ asin typically from search_amazon / get_amazon_product / list_bestsellers; ↓ review text can be fed directly to an LLM for pain-point clustering and keyword extraction.
 Cost: **10 points per page** (expensive). Start with pageCount=1 to confirm data, scale to 3-5 only when needed. Prefer filterByStar='critical' — highest signal density.
 Tips: filterByStar = all_stars / five_star ... one_star / positive / critical; sortBy = recent (default) | helpful; mediaType = all_contents (default) | media_reviews_only (with photos/videos, higher credibility).`,

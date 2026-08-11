@@ -15,7 +15,7 @@
  *      never share auth state.
  *
  * In both modes, tool registration is identical — `buildServer(ctx)`
- * wires the same Server with the same 17 tools and the same error
+ * wires the same Server with the same tool registry and the same error
  * envelope semantics.
  */
 

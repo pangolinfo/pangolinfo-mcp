@@ -1,7 +1,7 @@
 # Pangolinfo MCP — Tools Map
 
 > 给 AI Agent 和工程师同时看的工具协同图。
-> Live：19（18 业务 + 1 自省 `pangolinfo_capabilities`）。
+> Live：20（19 业务 + 1 自省 `pangolinfo_capabilities`）。
 
 ## 🚀 给 AI 的快速入口
 
@@ -14,11 +14,12 @@
 
 ## 工具按业务域分组
 
-### 🛒 Amazon 抓取（9）
+### 🛒 Amazon 抓取（10）
 | Tool | 一句话 | 必填 | 成本 |
 |---|---|---|---|
 | `search_amazon` | 关键词 SERP 首屏 ASIN 列表 | `keyword` | 1pt / ~5s |
 | `get_amazon_product` | 按 ASIN 抓单品完整 PDP | `asin` | 1pt / ~5s |
+| `get_amazon_delivery_time` | 完整商品详情 + 地址相关配送时效 | `asin` | **2pt** / ~5s |
 | `get_amazon_reviews` | 按 ASIN 翻页拉真实评论 | `asin` | **5pt/页** / ~10s |
 | `list_bestsellers` | 类目热销榜 Top-50 + 24h 变化 | `categorySlug` | 1pt / ~5s |
 | `list_new_releases` | 类目新品榜 Top-50（30 天） | `categorySlug` | 1pt / ~5s |
@@ -73,6 +74,7 @@ graph TD
     Q1 --> GAS["ai_search"]
 
     Q2 --> GAP["get_amazon_product"]
+    Q2 --> GLD["get_amazon_delivery_time"]
     Q3 --> SC
     Q4 --> LCP["list_category_products"]
     Q4 --> FC["filter_categories"]
