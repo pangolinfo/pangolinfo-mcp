@@ -65,6 +65,10 @@ const logger: ToolLogger = {
  */
 function buildServer(ctx: ToolContext): Server {
   const toolsByName = new Map<string, Tool>(tools.map((t) => [t.name, t]));
+  const clientSourceSchema = z
+    .enum(["skill", "mcp"])
+    .optional()
+    .describe("调用来源标记。仅由 Pangolinfo Skill 传 skill；普通 MCP 调用省略即可。");
 
   const server = new Server(
     {
@@ -79,13 +83,19 @@ function buildServer(ctx: ToolContext): Server {
   );
 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
-    tools: tools.map((tool) => ({
-      name: tool.name,
-      description: tool.description,
-      inputSchema: zodToJsonSchema(tool.inputSchema, {
-        $refStrategy: "none",
-      }) as Record<string, unknown>,
-    })),
+    tools: tools.map((tool) => {
+      const exposedSchema =
+        tool.inputSchema instanceof z.ZodObject
+          ? tool.inputSchema.extend({ clientSource: clientSourceSchema })
+          : tool.inputSchema;
+      return {
+        name: tool.name,
+        description: tool.description,
+        inputSchema: zodToJsonSchema(exposedSchema, {
+          $refStrategy: "none",
+        }) as Record<string, unknown>,
+      };
+    }),
   }));
 
   server.setRequestHandler(CallToolRequestSchema, async (req, extra) => {
@@ -93,6 +103,10 @@ function buildServer(ctx: ToolContext): Server {
     const keyTag = ctx.keyTag ?? "stdio";
     const toolName = req.params.name;
     const rawArgs = req.params.arguments ?? {};
+    const requestedSource = (rawArgs as Record<string, unknown>).clientSource;
+    const clientSource: "mcp" | "skill" = requestedSource === "skill" ? "skill" : "mcp";
+    const toolArgs = { ...(rawArgs as Record<string, unknown>) };
+    delete toolArgs.clientSource;
     const startedAt = process.hrtime.bigint();
 
     const tool = toolsByName.get(toolName);
@@ -113,7 +127,18 @@ function buildServer(ctx: ToolContext): Server {
     // human-readable [BAD_INPUT] the AI can act on — naming the offending
     // field, the rule it broke, and the field's own description — instead
     // of a raw ZodError JSON blob the AI can't parse into a fix.
-    const validation = tool.inputSchema.safeParse(rawArgs);
+    if (requestedSource !== undefined && requestedSource !== "skill" && requestedSource !== "mcp") {
+      return {
+        isError: true,
+        content: [
+          {
+            type: "text" as const,
+            text: "[BAD_INPUT] clientSource must be 'skill' or 'mcp'.\n(retriable=no)",
+          },
+        ],
+      };
+    }
+    const validation = tool.inputSchema.safeParse(toolArgs);
     if (!validation.success) {
       logCall({
         reqId,
@@ -183,7 +208,11 @@ function buildServer(ctx: ToolContext): Server {
 
     try {
       const parsed = validation.data;
-      const result = await tool.execute(parsed, ctx);
+      const callCtx: ToolContext = {
+        ...ctx,
+        client: ctx.client.withClientSource(clientSource),
+      };
+      const result = await tool.execute(parsed, callCtx);
       logCall({
         reqId,
         keyTag,

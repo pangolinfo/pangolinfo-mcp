@@ -17,24 +17,38 @@ export interface PangolinfoClientOptions {
   baseUrl: string;
   /** Optional fetch impl override, primarily for tests. */
   fetchImpl?: typeof fetch;
+  /** Analytics attribution propagated to scrapeapi; not an auth signal. */
+  clientSource?: "mcp" | "skill";
 }
 
 export class PangolinfoClient {
   private readonly apiKey: string;
   private readonly baseUrl: string;
   private readonly fetchImpl: typeof fetch;
+  private readonly clientSource: "mcp" | "skill";
 
   constructor(opts: PangolinfoClientOptions) {
     this.apiKey = opts.apiKey;
     // Strip trailing slash so we can safely concatenate.
     this.baseUrl = opts.baseUrl.replace(/\/+$/, "");
     this.fetchImpl = opts.fetchImpl ?? fetch;
+    this.clientSource = opts.clientSource ?? "mcp";
+  }
+
+  withClientSource(clientSource: "mcp" | "skill"): PangolinfoClient {
+    return new PangolinfoClient({
+      apiKey: this.apiKey,
+      baseUrl: this.baseUrl,
+      fetchImpl: this.fetchImpl,
+      clientSource,
+    });
   }
 
   private headers(): Record<string, string> {
     return {
       Authorization: `Bearer ${this.apiKey}`,
       "Content-Type": "application/json",
+      "X-Pangolinfo-Client-Source": this.clientSource,
       "User-Agent": CONFIG.USER_AGENT,
     };
   }

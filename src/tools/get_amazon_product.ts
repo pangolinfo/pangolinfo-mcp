@@ -32,8 +32,8 @@ const inputSchema = z.object({
     )
     .describe(
       t({
-        zh: "Amazon ASIN，10 位字母+数字（大小写均可，会自动转大写）。Examples: 'B09B8V1LZ3' (Echo Dot 5) / 'B0CRMZHDG8' (Stanley Quencher) / 'B0BDHWDR12' (AirPods Pro 2)。",
-        en: "Amazon ASIN, 10 letters/digits (case-insensitive — auto-uppercased). Examples: 'B09B8V1LZ3' (Echo Dot 5) / 'B0CRMZHDG8' (Stanley Quencher) / 'B0BDHWDR12' (AirPods Pro 2).",
+        zh: "Amazon ASIN，10 位字母+数字（大小写均可，会自动转大写）。Example: 'B0B4NLGCH5'。",
+        en: "Amazon ASIN, 10 letters/digits (case-insensitive — auto-uppercased). Example: 'B0B4NLGCH5'.",
       }),
     ),
   site: z

@@ -55,8 +55,8 @@ const inputSchema = z.object({
     .optional()
     .describe(
       t({
-        zh: "裸零件(后端按 parserName 自动拼 URL)。传这个**或** url 二选一。Examples: 'wireless earbuds'(amzKeyword)/ '172282'(amzProductOfCategory 的 nodeId)/ 'ATVPDKIKX0DER'(amzProductOfSeller 的 sellerId)/ 'B09B8V1LZ3'(amzProductDetail 的 ASIN)。用户/AI 通常只有零件,优先用这个。",
-        en: "Bare fragment (backend builds the URL per parserName). Pass this OR url. Examples: 'wireless earbuds' (amzKeyword) / '172282' (nodeId for amzProductOfCategory) / 'ATVPDKIKX0DER' (sellerId for amzProductOfSeller) / 'B09B8V1LZ3' (ASIN for amzProductDetail). Users/AI usually only have the fragment — prefer this.",
+        zh: "裸零件(后端按 parserName 自动拼 URL)。传这个**或** url 二选一。Examples: 'wireless earbuds'(amzKeyword)/ '172282'(amzProductOfCategory 的 nodeId)/ 'ATVPDKIKX0DER'(amzProductOfSeller 的 sellerId)/ 'B0B4NLGCH5'(amzProductDetail 或 amzDeliveryTime 的 ASIN)。用户/AI 通常只有零件,优先用这个。",
+        en: "Bare fragment (backend builds the URL per parserName). Pass this OR url. Examples: 'wireless earbuds' (amzKeyword) / '172282' (nodeId for amzProductOfCategory) / 'ATVPDKIKX0DER' (sellerId for amzProductOfSeller) / 'B0B4NLGCH5' (ASIN for amzProductDetail or amzDeliveryTime). Users/AI usually only have the fragment — prefer this.",
       }),
     ),
   url: z

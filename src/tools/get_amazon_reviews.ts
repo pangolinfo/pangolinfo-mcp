@@ -4,7 +4,7 @@
  * Wraps POST /api/v1/scrape (parserName=amzReviewV2) — the Amazon
  * Review API.
  *
- * Verified 2026-05-19 against scrapeapi prod with ASIN B09B8V1LZ3:
+ * Verified 2026-05-19 against scrapeapi prod with an Amazon ASIN:
  *   - Synchronous response (no callback needed)
  *   - data.json[0].data.totalReviews — total review count (string)
  *   - data.json[0].data.results[] — each review with
@@ -56,8 +56,8 @@ const inputSchema = z.object({
     )
     .describe(
       t({
-        zh: "Amazon ASIN（10 位字母+数字，大小写均可，会自动转大写）。Examples: 'B09B8V1LZ3' / 'B0CRMZHDG8'。",
-        en: "Amazon ASIN (10 letters/digits, case-insensitive — auto-uppercased). Examples: 'B09B8V1LZ3' / 'B0CRMZHDG8'.",
+        zh: "Amazon ASIN（10 位字母+数字，大小写均可，会自动转大写）。Example: 'B0B4NLGCH5'。",
+        en: "Amazon ASIN (10 letters/digits, case-insensitive — auto-uppercased). Example: 'B0B4NLGCH5'.",
       }),
     ),
   site: z.enum(REVIEW_SUPPORTED_SITES).default("amz_us")
