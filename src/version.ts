@@ -12,4 +12,4 @@
  * built bundle (everything inlined into dist/server.mjs). A plain
  * string here is portable across both with zero ceremony.
  */
-export const SERVER_VERSION = "0.7.9";
+export const SERVER_VERSION = "0.8.0";

@@ -41,6 +41,39 @@ const PARSERS = [
   "amzVariantAsin",
 ] as const;
 
+/** Keep this generic-scrape contract aligned with ext-scrapeapi BizUtils. */
+const SCRAPE_SITES = [
+  "amz_us",
+  "amz_de",
+  "amz_uk",
+  "amz_jp",
+  "amz_fr",
+  "amz_it",
+  "amz_es",
+  "amz_ca",
+  "amz_au",
+  "amz_mx",
+  "amz_sa",
+  "amz_ae",
+  "amz_br",
+] as const;
+
+const SCRAPE_ZIPCODES = [
+  "10041", "90001", "60601", "84104",
+  "W1S 3AS", "EH15 1LR", "M13 9PL", "M2 5BQ",
+  "M4C 4Y4", "V6E 1N2", "H3G 2K8", "T2R 0G5",
+  "80331", "10115", "20095", "60306",
+  "75000", "69001", "06000", "13000",
+  "100-0004", "060-8588", "163-8001", "900-8570",
+  "20019", "50121", "00042", "30100",
+  "41001", "28001", "08001", "46001",
+  "2000_SYDNEY", "3000_MELBOURNE",
+  "01000", "55000",
+  "Riyadh_الرياض", "Jeddah_جدة",
+  "Abu Dhabi_ADCO Compound", "Ajman_Aamra",
+  "03001-000", "20031-000",
+] as const;
+
 const inputSchema = z.object({
   parserName: z
     .enum(PARSERS)
@@ -70,21 +103,7 @@ const inputSchema = z.object({
       }),
     ),
   site: z
-    .enum([
-      "amz_us",
-      "amz_uk",
-      "amz_de",
-      "amz_jp",
-      "amz_fr",
-      "amz_it",
-      "amz_es",
-      "amz_ca",
-      "amz_au",
-      "amz_sa",
-      "amz_ae",
-      "amz_br",
-      "amz_mx",
-    ])
+    .enum(SCRAPE_SITES)
     .default("amz_us")
     .describe(
       t({
@@ -102,12 +121,12 @@ const inputSchema = z.object({
       }),
     ),
   zipcode: z
-    .string()
+    .enum(SCRAPE_ZIPCODES)
     .optional()
     .describe(
       t({
-        zh: "邮编,必须匹配 site 所在国家。可选;不传时后端随机挑一个。",
-        en: "ZIP code matching the site's country. Optional; backend picks one if omitted.",
+        zh: "邮编,必须匹配 site/URL 所在国家。可选;不传时后端随机选择。支持:美国 10041/90001/60601/84104;英国 W1S 3AS/EH15 1LR/M13 9PL/M2 5BQ;加拿大 M4C 4Y4/V6E 1N2/H3G 2K8/T2R 0G5;德国 80331/10115/20095/60306;法国 75000/69001/06000/13000;日本 100-0004/060-8588/163-8001/900-8570;意大利 20019/50121/00042/30100;西班牙 41001/28001/08001/46001;澳大利亚 2000_SYDNEY/3000_MELBOURNE;墨西哥 01000/55000;沙特 Riyadh_الرياض/Jeddah_جدة;阿联酋 Abu Dhabi_ADCO Compound/Ajman_Aamra;巴西 03001-000/20031-000。",
+        en: "ZIP/postal code matching the site or URL country. Optional; backend picks one when omitted. Supported: US 10041/90001/60601/84104; UK W1S 3AS/EH15 1LR/M13 9PL/M2 5BQ; CA M4C 4Y4/V6E 1N2/H3G 2K8/T2R 0G5; DE 80331/10115/20095/60306; FR 75000/69001/06000/13000; JP 100-0004/060-8588/163-8001/900-8570; IT 20019/50121/00042/30100; ES 41001/28001/08001/46001; AU 2000_SYDNEY/3000_MELBOURNE; MX 01000/55000; SA Riyadh_الرياض/Jeddah_جدة; AE Abu Dhabi_ADCO Compound/Ajman_Aamra; BR 03001-000/20031-000.",
       }),
     ),
 });
