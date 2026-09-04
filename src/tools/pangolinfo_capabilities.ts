@@ -210,6 +210,15 @@ const TOOL_META: ToolMeta[] = [
       en: "Ask Amazon Rufus AI assistant in natural language for grouped product picks (scene-based, no keyword)",
     },
   },
+  {
+    name: "get_amazon_alexa_questions",
+    cost: "0/5pt discovery outcome + 20pt/answered region (max 45pt)",
+    domain: "amazon",
+    oneLiner: {
+      zh: "Alexa Listing API：按 ASIN 提取 PDP 两区 Alexa 预设问题，可选并发获取绑定当前商品的答案",
+      en: "Alexa Listing API: extract both PDP Alexa question regions by ASIN, optionally answer each in product context",
+    },
+  },
 ];
 
 

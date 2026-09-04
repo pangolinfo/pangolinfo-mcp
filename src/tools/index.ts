@@ -27,6 +27,7 @@ import { aiSearch } from "./ai_search.js";
 import { keywordTrends } from "./keyword_trends.js";
 import { scrapeUrl } from "./scrape_url.js";
 import { searchAmazonAlexa } from "./search_amazon_alexa.js";
+import { getAmazonAlexaQuestions } from "./get_amazon_alexa_questions.js";
 import { pangolinfoCapabilities } from "./pangolinfo_capabilities.js";
 
 /**
@@ -58,4 +59,5 @@ export const tools: Tool[] = [
   keywordTrends,
   scrapeUrl,
   searchAmazonAlexa,
+  getAmazonAlexaQuestions,
 ];

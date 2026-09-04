@@ -1,7 +1,7 @@
 {
   "name": "pangolinfo-mcp",
-  "version": "0.8.0",
-  "description": "Pangolinfo MCP server - 20 Amazon e-commerce data tools for real-time ad tracking, delivery estimates, Sponsored Products analysis, VOC sentiment analysis, keyword monitoring, and competitor product audit (search, product detail, reviews, bestsellers, categories, niches, Amazon Rufus AI conversational picks, Google AI search, Google Trends, WIPO design/trademark with chained US litigation lookup) for AI assistants via Model Context Protocol.",
+  "version": "0.9.0",
+  "description": "Pangolinfo MCP server - 20 data tools plus local introspection for real-time Amazon research, delivery estimates, VOC analysis, keyword monitoring, IP screening, and ASIN-bound Rufus preset questions via Model Context Protocol.",
   "type": "module",
   "license": "MIT",
   "author": "Pangolinfo <support@pangolinfo.com>",
