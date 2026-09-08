@@ -1,80 +1,46 @@
-/**
- * Pangolinfo MCP - tool: search_amazon_alexa
- *
- * Wraps POST /api/v2/scrape (parserName=amazonAlexa) — Amazon Rufus
- * AI shopping assistant conversational recommendations.
- *
- * Backend contract (per docs.pangolinfo.com 2026-05-27):
- *   - param: string[] — up to 5 prompts, each billed at 6 points
- *   - screenshot: boolean — optional, default false
- *   - Response: data.json[{ prompt, content, products[{ title,
- *       items[{asin,url,title,cover,score,ratingsCount,price,
- *       originalPrice,describe}] }], follow_up_questions, screenshot }]
- *   - QPS 3. Cost = 6 points PER PROMPT (param.length × 6) — NOT flat per call.
- *   - Latency scales with prompt count: ~60–90s for 1 prompt, and can
- *     exceed 200s for multiple. Strongly prefer a single prompt per call.
- *
- * Same endpoint as ai_search.ts; differentiated by parserName.
- */
-
+/** Alexa Agent: independent marketplace pools; native HTTP unless a screenshot is requested. */
 import { z } from "zod";
-
 import type { Tool } from "./_types.js";
 import { t } from "../i18n.js";
 
 const inputSchema = z.object({
-  prompts: z
-    .array(z.string().min(1))
-    .min(1)
-    .max(5)
-    .describe(
-      t({
-        zh: "对话提示词数组(中英文均可)。每条独立向 Rufus 发问,返回独立分组结果。**按条计费:每条 6 积点**(传 N 条 = N×6 积点,不是每次固定 6)。**强烈建议每次只传 1 条**:这是慢接口,单条 60–90s,多条线性累加可能 >200s。最多 5 条,但多条既慢又费积点,多个需求请拆成多次单条调用。Examples: ['gifts for a 5-year-old who loves dinosaurs'] / ['camping gear under $50']。",
-        en: "Conversation prompts (zh or en). Each item is sent to Rufus independently and returns its own grouped results. **Billed per prompt: 6 points each** (N prompts = N×6 points, NOT a flat 6 per call). **Strongly prefer exactly 1 prompt per call**: this is a slow tool — 60–90s for one, and multiple add up linearly and can exceed 200s. Max 5, but multiple is both slow and costly; for several needs make several single-prompt calls. Examples: ['gifts for a 5-year-old who loves dinosaurs'] / ['camping gear under $50'].",
-      }),
-    ),
-  screenshot: z
-    .boolean()
-    .default(false)
-    .describe(
-      t({
-        zh: "是否返回 Rufus 对话页面截图 URL。默认 false。true 会增加后端负担,仅当需要给最终用户附图证据时打开。",
-        en: "Return the Rufus conversation screenshot URL. Defaults to false. Setting true adds backend load; only enable when you need an image proof for end users.",
-      }),
-    ),
+  prompts: z.array(z.string().min(1)).min(1).max(5).describe(t({
+    zh: "1–5 条自然语言问题。同一次调用内按顺序连续对话，不同调用之间不保留上下文。每条 6 积点（N 条=N×6），多轮会累加耗时。",
+    en: "1–5 natural-language prompts. Prompts within one call form a sequential conversation; separate calls do not retain context. Each prompt costs 6 points (N prompts=N×6); multiple turns increase latency.",
+  })),
+  site: z.enum(["us", "jp"]).default("us").describe(t({
+    zh: "Amazon 站点：us 美国（默认）、jp 日本。使用独立账号池，未开通的站点会报错，不回退到美国。",
+    en: "Amazon marketplace: us (United States, default) or jp (Japan). Pools are isolated; unavailable markets fail rather than falling back to the US.",
+  })),
+  screenshot: z.boolean().default(false).describe(t({
+    zh: "是否返回页面截图。默认 false 使用原生 HTTP；true 显式使用较慢的页面操作通道。",
+    en: "Return a page screenshot. False uses native HTTP; true explicitly selects the slower browser-rendered path.",
+  })),
 });
 
 export const searchAmazonAlexa: Tool<typeof inputSchema> = {
   name: "search_amazon_alexa",
   description: t({
-    zh: `[Amazon Rufus AI 对话推荐] 用自然语言提示词问 Amazon 的 AI 购物助手 Rufus,拿回分组的结构化商品推荐 + Rufus 文本回复 + 追问建议。
-Use when: 用户说"问 Amazon AI X"/"Rufus 推荐"/"用对话方式找商品"/"按场景找产品(送礼/露营/搬家/某需求)"/"开放式选品咨询"/"我不知道关键词,只知道场景"。
-Don't use: 已经有明确关键词想看 SERP(用 search_amazon);想要类目热销榜(用 list_bestsellers);单 ASIN 详情(用 get_amazon_product);Google 站外 AI 搜索(用 ai_search)。
-Returns: data.json[{ prompt, content, products[{ title, items[{ asin,url,title,cover,score,ratingsCount,price,originalPrice,describe }] }], follow_up_questions[], screenshot }] + 顶层 taskId / url / screenshot。注意 follow_up_questions 是 snake_case(后端原样透传)。
-Pair with: ↓ 拿到 asin 喂 get_amazon_product / get_amazon_reviews 深拆;follow_up_questions 可作下一轮 prompts 输入做多轮探索。
-Cost: **每条 prompt 6 积点**(按 prompts 条数计费,不是每次固定 6 积点;传 N 条 = N×6 积点)。
-⚠️ **慢接口**:**强烈建议每次只传 1 条 prompt**。单条响应通常 **60–90s**(Rufus 实时对话生成,比普通抓取慢得多);多条会线性累加,**可能超过 200s**,既慢又费积点。调用方请按长耗时处理——把 MCP 客户端的单次工具调用超时设到 **≥120s**(很多客户端默认只有 60s 静默超时,会先于本工具返回而 abort,导致 agent 误判本工具"不可用");不要因没秒回就重试或并发重复调用。服务端在你发了 progressToken 时会每 15s 发一次 progress 心跳以撑住兼容客户端的计时器。多个需求请拆成多次单条调用,而不是一次塞多条。`,
-    en: `[Amazon Rufus AI conversational recommendations] Ask Amazon's AI shopping assistant Rufus in natural language, get grouped structured product recommendations + Rufus text reply + follow-up questions.
-Use when: user says "ask Amazon AI X" / "Rufus recommendations" / "find products conversationally" / "products for a scene (gifting / camping / moving)" / "open-ended sourcing" / "I have no keyword, just a scenario".
-Don't use: when you already have a clear keyword and want SERP (use search_amazon); category bestseller ranks (use list_bestsellers); single-ASIN detail (use get_amazon_product); Google-side AI search (use ai_search).
-Returns: data.json[{ prompt, content, products[{ title, items[{ asin,url,title,cover,score,ratingsCount,price,originalPrice,describe }] }], follow_up_questions[], screenshot }] + top-level taskId / url / screenshot. Note: follow_up_questions is snake_case (passed through from backend verbatim).
-Pair with: ↓ feed asin into get_amazon_product / get_amazon_reviews for deep-dive; follow_up_questions can seed the next round's prompts for multi-turn exploration.
-Cost: **6 points PER PROMPT** (billed by prompts count, NOT a flat 6 per call; N prompts = N×6 points).
-⚠️ **Slow tool**: **strongly prefer sending exactly 1 prompt per call**. A single prompt typically takes **60–90s** (Rufus generates the conversation live — far slower than a normal scrape); multiple prompts add up linearly and **can exceed 200s**, costing both time and points. Treat this as a long-running call: set your MCP client's per-tool-call timeout to **≥120s** (many clients default to a 60s silent timeout that aborts before this tool returns, making the agent wrongly report it as "unavailable"), and do NOT retry or fire concurrent duplicate calls just because it didn't return instantly. When you send a progressToken, the server emits a progress heartbeat every 15s to keep spec-compliant clients' timers alive. For several needs, make several single-prompt calls rather than batching them.`,
+    zh: `[Alexa Agent API] 向 Amazon Rufus 提问，返回回答、分组商品推荐和追问建议。支持美国（默认）与日本独立账号池。
+Use when: 场景选品、送礼、开放式购物咨询；明确关键词用 search_amazon，单 ASIN 详情用 get_amazon_product。
+Returns: data.json[{prompt,content,products[{title,items[{asin,url,title,cover,score,ratingsCount,price,originalPrice,describe}]}],follow_up_questions[]}]; 商品和追问是否存在由 Amazon 回答决定，可能为空。
+Cost: 每条 prompt 6 积点，N 条=N×6。单次调用内多轮有上下文，跨调用不保留上下文。
+非截图请求使用原生 HTTP，截图请求使用页面通道。响应时间随账号初始化、网络和问题变化，不承诺固定秒数。客户端工具超时建议至少 120 秒；不要因为暂未返回就并发重复请求。`,
+    en: `[Alexa Agent API] Ask Amazon Rufus and receive answers, grouped product recommendations and follow-up suggestions. Separate pools support the United States (default) and Japan.
+Use when: scenario-based discovery, gifts or open-ended shopping advice. Use search_amazon for explicit keywords and get_amazon_product for a single ASIN.
+Returns: data.json[{prompt,content,products[{title,items[{asin,url,title,cover,score,ratingsCount,price,originalPrice,describe}]}],follow_up_questions[]}]. Products and suggestions depend on Amazon's answer and may be empty.
+Cost: 6 points per prompt; N prompts=N×6. Turns within one call share context; separate calls do not.
+Non-screenshot requests use native HTTP; screenshots use the browser path. Latency varies with initialization, network and question, with no fixed-time guarantee. Allow at least 120 seconds in the client; do not issue concurrent duplicates while waiting.`,
   }),
   inputSchema,
   async execute(input, ctx) {
-    ctx.logger.info(
-      `search_amazon_alexa: prompts=${input.prompts.length} screenshot=${input.screenshot}`,
-    );
+    ctx.logger.info(`search_amazon_alexa: site=${input.site} prompts=${input.prompts.length} screenshot=${input.screenshot}`);
     return ctx.client.post("/api/v2/scrape", {
       parserName: "amazonAlexa",
+      site: input.site,
       param: input.prompts,
       screenshot: input.screenshot,
-      // Rufus is slow: ~60-90s for a single prompt, and latency scales
-      // with prompt count (can exceed 200s for several). Allow enough
-      // headroom for the documented 5-prompt max so the backend doesn't
-      // cut off a legitimately slow multi-prompt request.
+      scrapeContext: { alexaMode: input.screenshot ? "playwright" : "direct" },
       timeout: 240000,
     });
   },
