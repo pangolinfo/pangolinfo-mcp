@@ -2,6 +2,8 @@
  * Pangolinfo MCP - tool: scrape_url
  *
  * Power-user / escape-hatch wrapper over POST /api/v1/scrape.
+ * amzFollowSeller is the exception: it uses the dedicated
+ * POST /api/v1/scrape/follow-seller endpoint.
  *
  * Two ways to point it at a page (the backend AmazonUrlBuilder accepts both):
  *   1. `content` + `site` — a BARE fragment (keyword / nodeId / sellerId /
@@ -88,8 +90,8 @@ const inputSchema = z.object({
     .optional()
     .describe(
       t({
-        zh: "裸零件(后端按 parserName 自动拼 URL)。传这个**或** url 二选一。Examples: 'wireless earbuds'(amzKeyword)/ '172282'(amzProductOfCategory 的 nodeId)/ 'ATVPDKIKX0DER'(amzProductOfSeller 的 sellerId)/ 'B0B4NLGCH5'(amzProductDetail 或 amzDeliveryTime 的 ASIN)。用户/AI 通常只有零件,优先用这个。",
-        en: "Bare fragment (backend builds the URL per parserName). Pass this OR url. Examples: 'wireless earbuds' (amzKeyword) / '172282' (nodeId for amzProductOfCategory) / 'ATVPDKIKX0DER' (sellerId for amzProductOfSeller) / 'B0B4NLGCH5' (ASIN for amzProductDetail or amzDeliveryTime). Users/AI usually only have the fragment — prefer this.",
+        zh: "裸零件(后端按 parserName 自动拼 URL)。传这个**或** url 二选一。Examples: 'wireless earbuds'(amzKeyword)/ '172282'(amzProductOfCategory 的 nodeId)/ 'ATVPDKIKX0DER'(amzProductOfSeller 的 sellerId)/ 'B0B4NLGCH5'(amzProductDetail、amzDeliveryTime 或 amzFollowSeller 的 ASIN)。用户/AI 通常只有零件,优先用这个。",
+        en: "Bare fragment (backend builds the URL per parserName). Pass this OR url. Examples: 'wireless earbuds' (amzKeyword) / '172282' (nodeId for amzProductOfCategory) / 'ATVPDKIKX0DER' (sellerId for amzProductOfSeller) / 'B0B4NLGCH5' (ASIN for amzProductDetail, amzDeliveryTime, or amzFollowSeller). Users/AI usually only have the fragment — prefer this.",
       }),
     ),
   url: z
@@ -139,7 +141,7 @@ export const scrapeUrl: Tool<typeof inputSchema> = {
 ② url=完整 Amazon 链接,**任何筛选/排序/翻页都拼进这个 url**(content 模式做不到的全靠它)。筛选语法举例:价格 $25-50 → '/s?k=earbuds&low-price=25&high-price=50';按评论数排序 → '&s=review-rank';翻页 → '&page=2';类目+价格 → '/s?i=aps&rh=n%3A172282&fs=true&low-price=25'。
 Use when: 普通工具拼不出目标 URL —— "搜 X 但只要 $25-50""按评论排序的结果""类目按价格筛";或用户已有一个具体 Amazon 链接要抓。要带筛选就走 url 模式。
 Don't use: 能用专用工具就别用 —— 纯关键词搜索用 search_amazon、单 ASIN 用 get_amazon_product、卖家用 list_seller_products、类目榜单用 list_bestsellers/list_new_releases。
-Returns (format='json'): data.json[0].data.{ ... results[] ... },结构随 parserName 而定。⚠️ content/url 与 parserName 不匹配 → 后端返回 data.{ status_code, rawHtml, url }(未解析)。
+Returns (format='json'): data.json[0].data.{ ... results[] ... },结构随 parserName 而定。amzFollowSeller 返回 items[{options,price,delivery,shipsFrom,soldBy,hasSoldByLink,isFeatured?}]，其中 hasSoldByLink 明确区分卖家名是否为超链接。⚠️ content/url 与 parserName 不匹配 → 后端返回 data.{ status_code, rawHtml, url }(未解析)。
 Pair with: ↓ 拿到 asin 喂 get_amazon_product / get_amazon_reviews。
 Cost: ~1 积点/次, ~5s。
 ⚠️ content 和 url 二选一(都传或都不传会报错);带筛选/翻页必须用 url 模式;parserName 必须和页面类型匹配。`,
@@ -148,7 +150,7 @@ Cost: ~1 积点/次, ~5s。
 ② url=full Amazon link — **put ANY filter/sort/pagination into this url** (the only way, since content mode can't). Filter syntax examples: price $25-50 → '/s?k=earbuds&low-price=25&high-price=50'; sort by reviews → '&s=review-rank'; paginate → '&page=2'; category+price → '/s?i=aps&rh=n%3A172282&fs=true&low-price=25'.
 Use when: a standard tool can't build the target URL — "search X but only $25-50" / "results sorted by reviews" / "category filtered by price"; or the user already has a specific Amazon link. For any filtering, use url mode.
 Don't use: when a purpose-built tool fits — plain keyword search → search_amazon, single ASIN → get_amazon_product, seller → list_seller_products, category ranks → list_bestsellers/list_new_releases.
-Returns (format='json'): data.json[0].data.{ ... results[] ... }, shape depends on parserName. ⚠️ If content/url doesn't match parserName, the backend returns data.{ status_code, rawHtml, url } (unparsed).
+Returns (format='json'): data.json[0].data.{ ... results[] ... }, shape depends on parserName. amzFollowSeller returns items[{options,price,delivery,shipsFrom,soldBy,hasSoldByLink,isFeatured?}], where hasSoldByLink explicitly tells whether the seller name was a hyperlink. ⚠️ If content/url doesn't match parserName, the backend returns data.{ status_code, rawHtml, url } (unparsed).
 Pair with: ↓ feed asin into get_amazon_product / get_amazon_reviews.
 Cost: ~1 point/call, ~5s.
 ⚠️ Pass exactly one of content / url (both or neither errors); filtering/pagination requires url mode; parserName must match the page type.`,
@@ -171,6 +173,37 @@ Cost: ~1 point/call, ~5s.
       `scrape_url: parserName=${input.parserName} ${hasUrl ? `url=${input.url}` : `content=${input.content} site=${input.site}`} format=${input.format}`,
     );
 
+    if (input.parserName === "amzFollowSeller") {
+      if (input.format !== "json") {
+        throw new PangolinfoError(
+          "BAD_INPUT",
+          400,
+          "amzFollowSeller only supports format='json'.",
+        );
+      }
+
+      const body: Record<string, unknown> = { timeout: 60000 };
+      if (hasUrl) {
+        const productUrl = new URL(input.url!);
+        const asin = extractAmazonAsin(productUrl);
+        if (!asin) {
+          throw new PangolinfoError(
+            "BAD_INPUT",
+            400,
+            "amzFollowSeller URL must contain an ASIN in /dp/{ASIN}, /gp/product/{ASIN}, or the asin query parameter.",
+          );
+        }
+        body.url = productUrl.origin;
+        body.content = asin;
+      } else {
+        body.site = input.site;
+        body.content = input.content!.trim();
+      }
+      if (input.zipcode) body.bizContext = { zipcode: input.zipcode };
+
+      return ctx.client.post("/api/v1/scrape/follow-seller", body);
+    }
+
     const body: Record<string, unknown> = {
       parserName: input.parserName,
       format: input.format,
@@ -187,3 +220,11 @@ Cost: ~1 point/call, ~5s.
     return ctx.client.post("/api/v1/scrape", body);
   },
 };
+
+function extractAmazonAsin(url: URL): string | undefined {
+  const queryAsin = url.searchParams.get("asin")?.trim().toUpperCase();
+  if (queryAsin && /^[A-Z0-9]{10}$/.test(queryAsin)) return queryAsin;
+
+  const pathMatch = url.pathname.match(/\/(?:dp|gp\/product)\/([A-Z0-9]{10})(?:[/?]|$)/i);
+  return pathMatch?.[1]?.toUpperCase();
+}
