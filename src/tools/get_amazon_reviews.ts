@@ -25,6 +25,7 @@ const REVIEW_SUPPORTED_SITES = [
   "amz_us",
   "amz_de",
   "amz_uk",
+  "amz_jp",
   "amz_au",
   "amz_mx",
   "amz_in",
@@ -39,6 +40,7 @@ const SITE_TO_DOMAIN: Record<ReviewSite, string> = {
   amz_us: "www.amazon.com",
   amz_de: "www.amazon.de",
   amz_uk: "www.amazon.co.uk",
+  amz_jp: "www.amazon.co.jp",
   amz_au: "www.amazon.com.au",
   amz_mx: "www.amazon.com.mx",
   amz_in: "www.amazon.in",
@@ -63,8 +65,8 @@ const inputSchema = z.object({
   site: z.enum(REVIEW_SUPPORTED_SITES).default("amz_us")
     .describe(
       t({
-        zh: "Amazon 站点。默认 amz_us。",
-        en: "Amazon marketplace. Defaults to amz_us.",
+        zh: "Amazon 评论站点，支持日本 amz_jp 等 10 个站点。默认 amz_us。",
+        en: "Amazon review marketplace: 10 supported sites including Japan (amz_jp). Defaults to amz_us.",
       }),
     ),
   pageCount: z

@@ -274,7 +274,7 @@ See [`MCP-TOOLS-MAP.md`](./MCP-TOOLS-MAP.md) for the full coordination graph (wh
 |---|---|---|---|
 | 1 | `search_amazon` | Amazon keyword search → structured product list | 0.75 |
 | 2 | `get_amazon_product` | Single-ASIN listing detail (title / bullets / features / aiReviewsSummary) | 0.75 |
-| 3 | `get_amazon_reviews` | Batch reviews for an ASIN (VOC mining) | 0.75 |
+| 3 | `get_amazon_reviews` | Batch reviews for an ASIN (VOC mining); 10 marketplaces including Japan (`site: "amz_jp"` → `www.amazon.co.jp`) | 0.75 |
 | 4 | `list_bestsellers` | Amazon Bestsellers by category | 0.75 |
 | 5 | `list_new_releases` | Amazon New Releases by category | 0.75 |
 | 6 | `list_seller_products` | Catalog of products under one seller | 0.75 |

@@ -20,7 +20,7 @@
 | `search_amazon` | 关键词 SERP 首屏 ASIN 列表 | `keyword` | 1pt / ~5s |
 | `get_amazon_product` | 按 ASIN 抓单品完整 PDP | `asin` | 1pt / ~5s |
 | `get_amazon_delivery_time` | 完整商品详情 + 地址相关配送时效 | `asin` | **2pt** / ~5s |
-| `get_amazon_reviews` | 按 ASIN 翻页拉真实评论 | `asin` | **5pt/页** / ~10s |
+| `get_amazon_reviews` | 按 ASIN 翻页拉真实评论，支持日本等 10 个站点 | `asin`；`site` 默认 `amz_us`，日本传 `amz_jp`（映射 `www.amazon.co.jp`） | **5pt/页** / ~10s |
 | `list_bestsellers` | 类目热销榜 Top-50 + 24h 变化 | `categorySlug` | 1pt / ~5s |
 | `list_new_releases` | 类目新品榜 Top-50（30 天） | `categorySlug` | 1pt / ~5s |
 | `list_seller_products` | 卖家店铺全部商品 | `sellerId` | 1pt / ~5s |
