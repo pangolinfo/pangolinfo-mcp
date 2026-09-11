@@ -266,32 +266,36 @@ If you're calling the endpoint directly (not through a standard MCP client):
 
 ---
 
-## Tools (18)
+## Tools (20)
 
 See [`MCP-TOOLS-MAP.md`](./MCP-TOOLS-MAP.md) for the full coordination graph (which tools chain into which).
 
 | # | Tool | Purpose | Cost (credits) |
 |---|---|---|---|
 | 1 | `search_amazon` | Amazon keyword search → structured product list | 0.75 |
-| 2 | `get_amazon_product` | Single-ASIN listing detail (title / bullets / features / aiReviewsSummary) | 0.75 |
-| 3 | `get_amazon_reviews` | Batch reviews for an ASIN (VOC mining); 10 marketplaces including Japan (`site: "amz_jp"` → `www.amazon.co.jp`) | 0.75 |
-| 4 | `list_bestsellers` | Amazon Bestsellers by category | 0.75 |
-| 5 | `list_new_releases` | Amazon New Releases by category | 0.75 |
-| 6 | `list_seller_products` | Catalog of products under one seller | 0.75 |
-| 7 | `list_category_products` | All products in a category leaf | 0.75 |
-| 8 | `search_categories` | Search Amazon category tree by keyword | 0.75 |
-| 9 | `get_category_children` | Drill down one level in the category tree | 0.75 |
-| 10 | `filter_categories` | Filter category nodes by criteria | 0.75 |
-| 11 | `filter_niches` | Niche discovery (size × competition × growth) | 0.75 |
-| 12 | `get_category_paths` | Resolve full ancestor paths for a category node | 0.75 |
-| 13 | `search_local_maps` | Google Maps local business search | 0.75 |
-| 14 | `wipo_search` | WIPO global design / trademark search (IP clearance). Set `enableLitigation=true` to also join related US patent-litigation (PACER) cases in the same call | 2 (+12 when `enableLitigation` finds a patent) |
-| 15 | `ai_search` | AI Search via Google SERP (AI Overview + organic, with compliance disclaimer) | 2 |
-| 16 | `keyword_trends` | Keyword Trends via Google Trends (with compliance disclaimer) | 1.5 |
-| 17 | `scrape_url` | Power-user escape hatch: scrape a raw Amazon URL + parserName (non-standard pages) | 0.75 |
-| 18 | `search_amazon_alexa` | Amazon Rufus AI conversational product picks (scene-based, no keyword) | 6 |
+| 2 | `get_amazon_product` | Single-ASIN listing detail (title / bullets / features / videos with `type` + `section` / aiReviewsSummary) | 0.75 |
+| 3 | `get_amazon_delivery_time` | Single-ASIN listing detail with destination-specific delivery estimates | 2 |
+| 4 | `get_amazon_reviews` | Batch reviews for an ASIN (VOC mining); 10 marketplaces including Japan (`site: "amz_jp"` → `www.amazon.co.jp`) | 0.75 |
+| 5 | `list_bestsellers` | Amazon Bestsellers by category | 0.75 |
+| 6 | `list_new_releases` | Amazon New Releases by category | 0.75 |
+| 7 | `list_seller_products` | Catalog of products under one seller | 0.75 |
+| 8 | `list_category_products` | All products in a category leaf | 0.75 |
+| 9 | `search_categories` | Search Amazon category tree by keyword | 0.75 |
+| 10 | `get_category_children` | Drill down one level in the category tree | 0.75 |
+| 11 | `filter_categories` | Filter category nodes by criteria | 0.75 |
+| 12 | `filter_niches` | Niche discovery (size × competition × growth) | 0.75 |
+| 13 | `get_category_paths` | Resolve full ancestor paths for a category node | 0.75 |
+| 14 | `search_local_maps` | Google Maps local business search | 0.75 |
+| 15 | `wipo_search` | WIPO global design / trademark search (IP clearance). Set `enableLitigation=true` to also join related US patent-litigation (PACER) cases in the same call | 2 (+12 when `enableLitigation` finds a patent) |
+| 16 | `ai_search` | AI Search via Google SERP (AI Overview + organic, with compliance disclaimer) | 2 |
+| 17 | `keyword_trends` | Keyword Trends via Google Trends (with compliance disclaimer) | 1.5 |
+| 18 | `scrape_url` | Power-user escape hatch: scrape a raw Amazon URL + parserName (non-standard pages) | 0.75 |
+| 19 | `search_amazon_alexa` | Amazon Rufus AI conversational product picks (scene-based, no keyword) | 6 |
+| 20 | `get_amazon_alexa_questions` | Alexa Listing API: extract ASIN-bound PDP preset questions; optionally answer each | 0/5 discovery outcome + 20/answered region (max 45) |
 
-> **Plus a free local call:** `pangolinfo_capabilities` returns the full tool catalog, canonical workflows, and usage tips with no backend round-trip (**0** credits). It is a self-introspection helper, not one of the 18 data tools.
+For competing offers, call `scrape_url` with `parserName=amzFollowSeller` and either an ASIN in `content` or an Amazon product URL. Each returned item includes `soldBy`, `hasSoldByLink` (linked seller name vs. plain text), and optional `isFeatured` for the featured offer.
+
+> **Plus a free local call:** `pangolinfo_capabilities` returns the full tool catalog, canonical workflows, and usage tips with no backend round-trip (**0** credits). It is a self-introspection helper, not one of the 20 data tools.
 
 Default marketplace is **Amazon US** (`marketplaceId=ATVPDKIKX0DER`, `zip=90001`). Override per call via tool arguments.
 
