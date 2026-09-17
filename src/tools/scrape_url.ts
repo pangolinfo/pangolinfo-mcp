@@ -136,7 +136,7 @@ const inputSchema = z.object({
 export const scrapeUrl: Tool<typeof inputSchema> = {
   name: "scrape_url",
   description: t({
-    zh: `[通用 Amazon 抓取 — 高级逃生口] 抓 5 个专用工具覆盖不到的页面。两种喂法二选一:
+    zh: `[Amazon Scraper API — 通用页面抓取] 抓 5 个专用工具覆盖不到的页面。两种喂法二选一:
 ① content=裸零件(关键词/nodeId/sellerId/ASIN)+ site,后端按 parserName 自动拼基础 URL。**content 模式不带筛选/排序/翻页** —— 只是裸零件。用户/AI 通常只有零件,简单页用这个最省事。
 ② url=完整 Amazon 链接,**任何筛选/排序/翻页都拼进这个 url**(content 模式做不到的全靠它)。筛选语法举例:价格 $25-50 → '/s?k=earbuds&low-price=25&high-price=50';按评论数排序 → '&s=review-rank';翻页 → '&page=2';类目+价格 → '/s?i=aps&rh=n%3A172282&fs=true&low-price=25'。
 Use when: 普通工具拼不出目标 URL —— "搜 X 但只要 $25-50""按评论排序的结果""类目按价格筛";或用户已有一个具体 Amazon 链接要抓。要带筛选就走 url 模式。
@@ -145,7 +145,7 @@ Returns (format='json'): data.json[0].data.{ ... results[] ... },结构随 parse
 Pair with: ↓ 拿到 asin 喂 get_amazon_product / get_amazon_reviews。
 Cost: ~1 积点/次, ~5s。
 ⚠️ content 和 url 二选一(都传或都不传会报错);带筛选/翻页必须用 url 模式;parserName 必须和页面类型匹配。`,
-    en: `[Generic Amazon scrape — power-user escape hatch] Scrape pages the 5 purpose-built tools don't cover. Two input modes (pick one):
+    en: `[Amazon Scraper API — generic page access] Scrape pages the 5 purpose-built tools don't cover. Two input modes (pick one):
 ① content=bare fragment (keyword / nodeId / sellerId / ASIN) + site — backend builds a basic URL per parserName. **content mode carries NO filter/sort/pagination** — it's just the bare fragment. Best for simple pages when you only have the fragment.
 ② url=full Amazon link — **put ANY filter/sort/pagination into this url** (the only way, since content mode can't). Filter syntax examples: price $25-50 → '/s?k=earbuds&low-price=25&high-price=50'; sort by reviews → '&s=review-rank'; paginate → '&page=2'; category+price → '/s?i=aps&rh=n%3A172282&fs=true&low-price=25'.
 Use when: a standard tool can't build the target URL — "search X but only $25-50" / "results sorted by reviews" / "category filtered by price"; or the user already has a specific Amazon link. For any filtering, use url mode.
