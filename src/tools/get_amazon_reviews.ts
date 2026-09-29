@@ -26,6 +26,7 @@ const REVIEW_SUPPORTED_SITES = [
   "amz_de",
   "amz_uk",
   "amz_jp",
+  "amz_fr",
   "amz_au",
   "amz_mx",
   "amz_in",
@@ -41,6 +42,7 @@ const SITE_TO_DOMAIN: Record<ReviewSite, string> = {
   amz_de: "www.amazon.de",
   amz_uk: "www.amazon.co.uk",
   amz_jp: "www.amazon.co.jp",
+  amz_fr: "www.amazon.fr",
   amz_au: "www.amazon.com.au",
   amz_mx: "www.amazon.com.mx",
   amz_in: "www.amazon.in",
@@ -65,8 +67,8 @@ const inputSchema = z.object({
   site: z.enum(REVIEW_SUPPORTED_SITES).default("amz_us")
     .describe(
       t({
-        zh: "Amazon 评论站点，支持日本 amz_jp 等 10 个站点。默认 amz_us。",
-        en: "Amazon review marketplace: 10 supported sites including Japan (amz_jp). Defaults to amz_us.",
+        zh: "Amazon 评论站点，支持法国 amz_fr、日本 amz_jp 等 11 个站点。默认 amz_us。",
+        en: "Amazon review marketplace: 11 supported sites including France (amz_fr) and Japan (amz_jp). Defaults to amz_us.",
       }),
     ),
   pageCount: z
@@ -134,14 +136,16 @@ export const getAmazonReviews: Tool<typeof inputSchema> = {
     zh: `[Amazon 评论批量抓取] 翻页拉某 ASIN 的真实买家评论。可按星级/排序/媒体类型过滤。
 Use when: 用户说"看一下 X 的差评""挖痛点""分析竞品评论""做 VOC""为 Listing 找用户原声"；或新品立项前差评扫描；或 listing 优化要找改进点。
 Don't use: 只看 PDP 自带的几条评论摘要（用 get_amazon_product，里面已含 5-10 条 reviews 和 aiReviewsSummary，对快速判断已经够）；做关键词搜索（用 search_amazon）。
-Returns: data.json[0].data = { totalReviews（商品评论总数，无信息时为空串）, results[{ reviewId, date, country, star, title, content, author, authorId, authorLink, imgs[], videos, purchased, vineVoice, helpful, attributes }] } — 1 页约 10 条评论。
+Returns: data.json[0].data = { totalReviews（商品评论总数，无信息时为空串）, results[{ asin, reviewId, date, country, star, title, content, author, authorId, authorLink, imgs[], videos, purchased, vineVoice, helpful, attributes }] } — 1 页约 10 条评论。
+ASIN: 优先返回评论自身的变体 ASIN；缺失时使用页面商品 ASIN（不保证是购买变体）；两者均无法识别时返回空串。
 Pair with: ↑ asin 常来自 search_amazon / get_amazon_product / list_bestsellers；↓ 评论文本可直接给 LLM 做痛点聚类、关键词提取。
 Cost: **10 积点/页**（贵）。建议先 pageCount=1 探一下，确认有数据再 pageCount=3~5 扩量。filterByStar='critical' 优先（差评信号密度最高）。
 Tips: filterByStar 取值 = all_stars / five_star ... one_star / positive / critical；sortBy = recent (默认) | helpful；mediaType = all_contents (默认) | media_reviews_only (带图带视频，真实度更高)。`,
     en: `[Amazon review batch scrape] Page-fetch real buyer reviews for an ASIN. Filterable by star / sort / media type.
 Use when: user says "look at X's negative reviews" / "mine pain points" / "analyse competitor reviews" / "do VOC" / "find user complaints for Listing copy"; or pre-launch critical-review scan; or finding improvement points for listing optimization.
 Don't use: when the few reviews already in the PDP would suffice (get_amazon_product carries 5-10 reviews + aiReviewsSummary — enough for a quick read); for keyword search (use search_amazon).
-Returns: data.json[0].data = { totalReviews (total review count; empty when unavailable), results[{ reviewId, date, country, star, title, content, author, authorId, authorLink, imgs[], videos, purchased, vineVoice, helpful, attributes }] } — ~10 reviews per page.
+Returns: data.json[0].data = { totalReviews (total review count; empty when unavailable), results[{ asin, reviewId, date, country, star, title, content, author, authorId, authorLink, imgs[], videos, purchased, vineVoice, helpful, attributes }] } — ~10 reviews per page.
+ASIN: Uses the review variant ASIN when available; otherwise falls back to the page product ASIN (not necessarily the purchased variant). Empty if neither can be identified.
 Pair with: ↑ asin typically from search_amazon / get_amazon_product / list_bestsellers; ↓ review text can be fed directly to an LLM for pain-point clustering and keyword extraction.
 Cost: **10 points per page** (expensive). Start with pageCount=1 to confirm data, scale to 3-5 only when needed. Prefer filterByStar='critical' — highest signal density.
 Tips: filterByStar = all_stars / five_star ... one_star / positive / critical; sortBy = recent (default) | helpful; mediaType = all_contents (default) | media_reviews_only (with photos/videos, higher credibility).`,

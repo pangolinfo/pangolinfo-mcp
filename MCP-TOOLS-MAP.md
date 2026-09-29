@@ -20,7 +20,7 @@
 | `search_amazon` | 关键词 SERP 首屏 ASIN 列表 | `keyword` | 1pt / ~5s |
 | `get_amazon_product` | 按 ASIN 抓单品完整 PDP | `asin` | 1pt / ~5s |
 | `get_amazon_delivery_time` | 完整商品详情 + 地址相关配送时效 | `asin` | **2pt** / ~5s |
-| `get_amazon_reviews` | 按 ASIN 翻页拉真实评论，支持日本等 10 个站点 | `asin`；`site` 默认 `amz_us`，日本传 `amz_jp`（映射 `www.amazon.co.jp`） | **5pt/页** / ~10s |
+| `get_amazon_reviews` | 按 ASIN 翻页拉真实评论，支持法国、日本等 11 个站点 | `asin`；`site` 默认 `amz_us`，法国传 `amz_fr`（映射 `www.amazon.fr`），日本传 `amz_jp` | **5pt/页** / ~10s |
 | `list_bestsellers` | 类目热销榜 Top-50 + 24h 变化 | `categorySlug` | 1pt / ~5s |
 | `list_new_releases` | 类目新品榜 Top-50（30 天） | `categorySlug` | 1pt / ~5s |
 | `list_seller_products` | 卖家店铺全部商品 | `sellerId` | 1pt / ~5s |
@@ -247,3 +247,5 @@ MCP **故意不暴露**以下能力（属于商业 / 安全敏感操作）：
 - 接口契约：`CONTRACT.md`、`CONTRACT-tools.md`、`CONTRACT-i18n.md`、`CONTRACT-installer.md`
 - AI 友好度复盘：`REVIEW-ai-friendliness.md`
 - 已知风险：`RISKS.md`
+
+`get_amazon_reviews` 返回的 `data.json[].data.results[].asin`：优先返回评论自身的变体 ASIN；缺失时使用页面商品 ASIN（不保证是购买变体）；两者均无法识别时返回空串。
