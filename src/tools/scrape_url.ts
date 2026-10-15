@@ -141,7 +141,7 @@ export const scrapeUrl: Tool<typeof inputSchema> = {
 ② url=完整 Amazon 链接,**任何筛选/排序/翻页都拼进这个 url**(content 模式做不到的全靠它)。筛选语法举例:价格 $25-50 → '/s?k=earbuds&low-price=25&high-price=50';按评论数排序 → '&s=review-rank';翻页 → '&page=2';类目+价格 → '/s?i=aps&rh=n%3A172282&fs=true&low-price=25'。
 Use when: 普通工具拼不出目标 URL —— "搜 X 但只要 $25-50""按评论排序的结果""类目按价格筛";或用户已有一个具体 Amazon 链接要抓。要带筛选就走 url 模式。
 Don't use: 能用专用工具就别用 —— 纯关键词搜索用 search_amazon、单 ASIN 用 get_amazon_product、卖家用 list_seller_products、类目榜单用 list_bestsellers/list_new_releases。
-Returns (format='json'): data.json[0].data.{ ... results[] ... },结构随 parserName 而定。amzFollowSeller 返回 items[{options,price,delivery,shipsFrom,soldBy,hasSoldByLink,isFeatured?}]，其中 hasSoldByLink 明确区分卖家名是否为超链接。⚠️ content/url 与 parserName 不匹配 → 后端返回 data.{ status_code, rawHtml, url }(未解析)。
+Returns (format='json'): data.json[0].data.{ ... results[] ... },结构随 parserName 而定。amzFollowSeller 返回 items[{options,price,delivery,shipsFrom,soldBy,hasSoldByLink,isFeatured?}]，其中 hasSoldByLink 明确区分卖家名是否为超链接。9204 表示当前站点 ASIN 不存在，正常计费，不自动重试；9206 表示已确认 ASIN 重定向，已正常计费，message 含目标 ASIN；不要自动重试或自动请求目标 ASIN。⚠️ content/url 与 parserName 不匹配 → 后端返回 data.{ status_code, rawHtml, url }(未解析)。
 Pair with: ↓ 拿到 asin 喂 get_amazon_product / get_amazon_reviews。
 Cost: ~1 积点/次, ~5s。
 ⚠️ content 和 url 二选一(都传或都不传会报错);带筛选/翻页必须用 url 模式;parserName 必须和页面类型匹配。`,
@@ -150,7 +150,7 @@ Cost: ~1 积点/次, ~5s。
 ② url=full Amazon link — **put ANY filter/sort/pagination into this url** (the only way, since content mode can't). Filter syntax examples: price $25-50 → '/s?k=earbuds&low-price=25&high-price=50'; sort by reviews → '&s=review-rank'; paginate → '&page=2'; category+price → '/s?i=aps&rh=n%3A172282&fs=true&low-price=25'.
 Use when: a standard tool can't build the target URL — "search X but only $25-50" / "results sorted by reviews" / "category filtered by price"; or the user already has a specific Amazon link. For any filtering, use url mode.
 Don't use: when a purpose-built tool fits — plain keyword search → search_amazon, single ASIN → get_amazon_product, seller → list_seller_products, category ranks → list_bestsellers/list_new_releases.
-Returns (format='json'): data.json[0].data.{ ... results[] ... }, shape depends on parserName. amzFollowSeller returns items[{options,price,delivery,shipsFrom,soldBy,hasSoldByLink,isFeatured?}], where hasSoldByLink explicitly tells whether the seller name was a hyperlink. ⚠️ If content/url doesn't match parserName, the backend returns data.{ status_code, rawHtml, url } (unparsed).
+Returns (format='json'): data.json[0].data.{ ... results[] ... }, shape depends on parserName. amzFollowSeller returns items[{options,price,delivery,shipsFrom,soldBy,hasSoldByLink,isFeatured?}], where hasSoldByLink explicitly tells whether the seller name was a hyperlink. Code 9204 means the ASIN is missing on this marketplace; it is billed and must not be automatically retried. Code 9206 is a confirmed, billed ASIN redirect; message identifies the destination. Do not automatically retry or query the destination ASIN. ⚠️ If content/url doesn't match parserName, the backend returns data.{ status_code, rawHtml, url } (unparsed).
 Pair with: ↓ feed asin into get_amazon_product / get_amazon_reviews.
 Cost: ~1 point/call, ~5s.
 ⚠️ Pass exactly one of content / url (both or neither errors); filtering/pagination requires url mode; parserName must match the page type.`,

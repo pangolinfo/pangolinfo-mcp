@@ -20,7 +20,7 @@
 | `search_amazon` | 关键词 SERP 首屏 ASIN 列表 | `keyword` | 1pt / ~5s |
 | `get_amazon_product` | 按 ASIN 抓单品完整 PDP | `asin` | 1pt / ~5s |
 | `get_amazon_delivery_time` | 完整商品详情 + 地址相关配送时效 | `asin` | **2pt** / ~5s |
-| `get_amazon_reviews` | 按 ASIN 翻页拉真实评论，支持法国、日本等 11 个站点 | `asin`；`site` 默认 `amz_us`，法国传 `amz_fr`（映射 `www.amazon.fr`），日本传 `amz_jp` | **5pt/页** / ~10s |
+| `get_amazon_reviews` | 按 ASIN 翻页拉真实评论，支持法国、意大利、西班牙、巴西、日本等 14 个站点 | `asin`；`site` 默认 `amz_us`，法国传 `amz_fr`（映射 `www.amazon.fr`），意大利 `amz_it`、西班牙 `amz_es`、巴西 `amz_br`（映射 `www.amazon.com.br`），日本传 `amz_jp` | **5pt/页** / ~10s |
 | `list_bestsellers` | 类目热销榜 Top-50 + 24h 变化 | `categorySlug` | 1pt / ~5s |
 | `list_new_releases` | 类目新品榜 Top-50（30 天） | `categorySlug` | 1pt / ~5s |
 | `list_seller_products` | 卖家店铺全部商品 | `sellerId` | 1pt / ~5s |
@@ -30,6 +30,8 @@
 | `get_amazon_alexa_questions` | Alexa Listing API：提取 ASIN 绑定的 PDP 两区预设问题，可选获取答案 | `asin` 或 `url` | **0/5/25/45pt** / 慢任务 |
 
 `scrape_url` 使用 `parserName=amzFollowSeller` 时会调用专用跟卖接口。返回 `items[]` 的 `soldBy` 为卖家名，`hasSoldByLink` 明确区分卖家名是超链接（`true`）还是纯文本（`false`），`isFeatured` 标识置顶报价。
+
+商品副标题/亮点统一读取 `get_amazon_product` JSON 的 `data.json[0].data.results[0].itemHighlights`：独立副标题优先，其次主标题分隔符后段，最后从已解析的 `Item Highlight(s)` 属性回填；缺失为空字符串，无需转 Markdown。
 
 ### 🧭 Amazon 利基数据（5）
 | Tool | 一句话 | 必填 | 成本 |

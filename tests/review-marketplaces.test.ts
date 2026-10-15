@@ -3,15 +3,19 @@ import assert from "node:assert/strict";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { getAmazonReviews } from "../src/tools/get_amazon_reviews.js";
 
-test("review schema exposes France and preserves the existing ten sites", () => {
-  const sites = ["amz_us", "amz_de", "amz_uk", "amz_jp", "amz_fr", "amz_au", "amz_mx", "amz_in", "amz_eg", "amz_ae", "amz_ca"];
+test("review schema exposes Italy/Spain/Brazil and preserves the existing eleven sites", () => {
+  const sites = [
+    "amz_us", "amz_de", "amz_uk", "amz_jp", "amz_fr", "amz_it", "amz_es", "amz_br",
+    "amz_au", "amz_mx", "amz_in", "amz_eg", "amz_ae", "amz_ca",
+  ];
   const schema = zodToJsonSchema(getAmazonReviews.inputSchema) as any;
   assert.deepEqual(schema.properties.site.enum, sites);
   for (const site of sites) {
     assert.equal(getAmazonReviews.inputSchema.parse({ asin: "B012345678", site }).site, site);
   }
   assert.equal(getAmazonReviews.inputSchema.parse({ asin: "B012345678" }).site, "amz_us");
-  assert.throws(() => getAmazonReviews.inputSchema.parse({ asin: "B012345678", site: "amz_it" }));
+  // 沙特站评论接口尚未开放
+  assert.throws(() => getAmazonReviews.inputSchema.parse({ asin: "B012345678", site: "amz_sa" }));
 });
 
 test("France review request maps to amazon.fr with the supplied two-page example", async () => {
@@ -26,6 +30,26 @@ test("France review request maps to amazon.fr with the supplied two-page example
     format: "json", formatType: "all_formats", mediaType: "all_contents", parserName: "amzReviewV2",
   }]]);
 });
+
+// 2026-10-15 上游新增意/西/巴三站，示例 ASIN 取自 Randy 提供的上线 curl
+for (const [site, domain, asin] of [
+  ["amz_it", "www.amazon.it", "B0DN67T63N"],
+  ["amz_es", "www.amazon.es", "B0FDB3Y1YT"],
+  ["amz_br", "www.amazon.com.br", "B089Y5NKDR"],
+] as const) {
+  test(`${site} review request maps to ${domain} with the two-page example`, async () => {
+    const calls: any[] = [];
+    const result = { data: { json: [{ data: { results: [{ asin }] } }] } };
+    const ctx = { logger: { info() {} }, client: { post: async (...args: any[]) => { calls.push(args); return result; } } } as any;
+    const input = getAmazonReviews.inputSchema.parse({ asin: asin.toLowerCase(), site, pageCount: 2 });
+    assert.equal(await getAmazonReviews.execute(input, ctx), result);
+    assert.deepEqual(calls, [["/api/v1/scrape", {
+      url: `https://${domain}`, site: "",
+      bizContext: { bizKey: "review", pageCount: 2, asin, filterByStar: "all_stars", sortBy: "recent" },
+      format: "json", formatType: "all_formats", mediaType: "all_contents", parserName: "amzReviewV2",
+    }]]);
+  });
+}
 
 test("Japan review request maps to co.jp and retains V1 parser and filters", async () => {
   const calls: any[] = [];

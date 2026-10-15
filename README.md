@@ -275,7 +275,7 @@ See [`MCP-TOOLS-MAP.md`](./MCP-TOOLS-MAP.md) for the full coordination graph (wh
 | 1 | `search_amazon` | Amazon keyword search → structured product list | 0.75 |
 | 2 | `get_amazon_product` | Single-ASIN listing detail (title / bullets / features / videos with `type` + `section` / aiReviewsSummary) | 0.75 |
 | 3 | `get_amazon_delivery_time` | Single-ASIN listing detail with destination-specific delivery estimates | 2 |
-| 4 | `get_amazon_reviews` | Batch reviews for an ASIN (VOC mining); 11 marketplaces including France (`site: "amz_fr"` → `www.amazon.fr`) and Japan (`amz_jp`) | 0.75 |
+| 4 | `get_amazon_reviews` | Batch reviews for an ASIN (VOC mining); 14 marketplaces including France (`site: "amz_fr"` → `www.amazon.fr`), Italy (`amz_it`), Spain (`amz_es`), Brazil (`amz_br` → `www.amazon.com.br`) and Japan (`amz_jp`) | 0.75 |
 | 5 | `list_bestsellers` | Amazon Bestsellers by category | 0.75 |
 | 6 | `list_new_releases` | Amazon New Releases by category | 0.75 |
 | 7 | `list_seller_products` | Catalog of products under one seller | 0.75 |
@@ -294,6 +294,12 @@ See [`MCP-TOOLS-MAP.md`](./MCP-TOOLS-MAP.md) for the full coordination graph (wh
 | 20 | `get_amazon_alexa_questions` | Alexa Listing API: extract ASIN-bound PDP preset questions; optionally answer each | 0/5 discovery outcome + 20/answered region (max 45) |
 
 For competing offers, call `scrape_url` with `parserName=amzFollowSeller` and either an ASIN in `content` or an Amazon product URL. Each returned item includes `soldBy`, `hasSoldByLink` (linked seller name vs. plain text), and optional `isFeatured` for the featured offer.
+
+Follow Seller code `9206` means a confirmed product redirect and is billed as a normal request (usually 1 credit; see `pointCost`). `message` contains the destination, for example `Redirected to ASIN B0DSHTVHNZ`. `data.json` retains the empty result for the original request; the destination product is not queried automatically. Do not automatically retry the original ASIN. Query the destination separately only after confirming it; that request is billed separately. Fetch failures, mismatched delivery destinations, and unconfirmed redirects remain `9200` without a charge. MCP reports `[ASIN_REDIRECTED]` with `retriable=no` and preserves the backend message and `pointCost` in error details.
+
+When the product-detail check explicitly confirms that the requested ASIN is missing on the current marketplace, Follow Seller returns `9204` with `message: ASIN not found on this marketplace: B08HSS37H7` (the requested ASIN). This is billed normally, usually 1 credit; see `pointCost`. Do not automatically retry the same marketplace and ASIN; check the marketplace and identifier first. The ASIN may still exist on another marketplace. An empty or 404 offers page alone, network failures, challenges, or inconclusive evidence do not establish that the ASIN is missing; unconfirmed results remain `9200` without a charge. MCP reports `[ASIN_UNAVAILABLE]` with `retriable=no` and preserves the message and credit cost.
+
+For product subtitles/highlights, read `get_amazon_product` JSON at `data.json[0].data.results[0].itemHighlights`. The parser normalizes the dedicated subtitle, the main-title suffix, or an already parsed `Item Highlight(s)` attribute into this string; it is empty when unavailable. Markdown conversion is not required.
 
 > **Plus a free local call:** `pangolinfo_capabilities` returns the full tool catalog, canonical workflows, and usage tips with no backend round-trip (**0** credits). It is a self-introspection helper, not one of the 20 data tools.
 
@@ -442,3 +448,6 @@ Report security issues privately to <security@pangolinfo.com> — please do not 
 ## License
 
 [MIT](./LICENSE) © Pangolinfo
+
+
+For synchronous product details (`POST /api/v1/scrape`, `parserName=amzProductDetail`), an explicit confirmation that the ASIN is missing on the requested marketplace returns `9204` with the message `ASIN not found on this marketplace: B08HSS37H7` (the requested ASIN). Normal format-specific pricing applies; see `pointCost` (usually 1 credit for JSON). Do not automatically retry the same marketplace and ASIN; check the marketplace and identifier. The ASIN may exist on another marketplace. Network failures or no content remain `9200` without a charge. This describes the synchronous product-detail endpoint. `get_amazon_product` and `scrape_url` surface this as `[ASIN_UNAVAILABLE]`, `retriable=no`.

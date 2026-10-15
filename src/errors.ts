@@ -27,6 +27,8 @@ export type PangolinfoErrorCode =
   | "QUOTA"
   | "RATE_LIMIT"
   | "BAD_INPUT"
+  | "ASIN_REDIRECTED"
+  | "ASIN_UNAVAILABLE"
   | "SERVER"
   | "NETWORK";
 
@@ -69,7 +71,7 @@ export function codeFromHttpStatus(status: number): PangolinfoErrorCode {
 }
 
 /**
- * Map a Pangolinfo backend business error code to our 6-class taxonomy.
+ * Map a Pangolinfo backend business error code to an actionable category.
  *
  * SOURCE OF TRUTH — this table is transcribed verbatim from
  *   crawler-ext-service/ext-scrapeapi/src/main/java/com/dml/ext/scrape/exception/ErrorCode.java
@@ -140,6 +142,10 @@ export function codeFromBizCode(bizCode: number): PangolinfoErrorCode {
       return "BAD_INPUT";
     case 9202: // REVIEW_SITE_UNDER_MAINTENANCE — terminal for this site
       return "BAD_INPUT";
+    case 9206: // Confirmed follow-seller ASIN redirect — charged, never auto-retry
+      return "ASIN_REDIRECTED";
+    case 9204: // ASIN missing/mismatched on the requested marketplace — terminal and billed
+      return "ASIN_UNAVAILABLE";
 
     // 5xxx 系统异常 + catch-all (UNKNOWN=9999, etc.)
     default:
@@ -198,6 +204,16 @@ export function hintFor(code: PangolinfoErrorCode): string {
       return t({
         zh: "请求参数有误（重试相同参数无用）。请检查并修正入参（站点、ASIN、zipcode、parserName 等）后重试。",
         en: "Invalid request parameters (retrying the same input will not help). Fix the arguments (site, ASIN, zipcode, parserName, etc.) and try again.",
+      });
+    case "ASIN_REDIRECTED":
+      return t({
+        zh: "商品已重定向，目标 ASIN 见返回消息。本次已按正常请求计费；不要自动重试原 ASIN，也不要自动请求目标 ASIN 造成再次扣费。请告知用户，由用户决定是否查询目标商品。",
+        en: "The product redirected; the destination ASIN is in the message. This request was billed normally. Do not automatically retry the original ASIN or query the destination and incur another charge. Let the user decide whether to query that product.",
+      });
+    case "ASIN_UNAVAILABLE":
+      return t({
+        zh: "该站点未找到请求的 ASIN，或页面与请求商品不符，具体原因见返回消息。本次按正常请求计费，请勿自动重试相同站点和 ASIN；请用户核对站点及商品编号。",
+        en: "The requested ASIN was not found on this marketplace, or the page did not match it; see the message. This request was billed normally. Do not automatically retry the same marketplace and ASIN. Ask the user to check the marketplace and product identifier.",
       });
     case "SERVER":
       return t({
