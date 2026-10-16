@@ -29,6 +29,7 @@ export type PangolinfoErrorCode =
   | "BAD_INPUT"
   | "ASIN_REDIRECTED"
   | "ASIN_UNAVAILABLE"
+  | "ALEXA_REFUSED"
   | "SERVER"
   | "NETWORK";
 
@@ -146,6 +147,8 @@ export function codeFromBizCode(bizCode: number): PangolinfoErrorCode {
       return "ASIN_REDIRECTED";
     case 9204: // ASIN missing/mismatched on the requested marketplace — terminal and billed
       return "ASIN_UNAVAILABLE";
+    case 9207: // Amazon Rufus declined the question — not billed, same prompt is refused again
+      return "ALEXA_REFUSED";
 
     // 5xxx 系统异常 + catch-all (UNKNOWN=9999, etc.)
     default:
@@ -214,6 +217,11 @@ export function hintFor(code: PangolinfoErrorCode): string {
       return t({
         zh: "该站点未找到请求的 ASIN，或页面与请求商品不符，具体原因见返回消息。本次按正常请求计费，请勿自动重试相同站点和 ASIN；请用户核对站点及商品编号。",
         en: "The requested ASIN was not found on this marketplace, or the page did not match it; see the message. This request was billed normally. Do not automatically retry the same marketplace and ASIN. Ask the user to check the marketplace and product identifier.",
+      });
+    case "ALEXA_REFUSED":
+      return t({
+        zh: "Amazon Alexa（Rufus）明确拒绝回答该问题，拒答原文见返回消息。本次未计费；原样重试同一问题仍会被拒，不要自动重试。请告知用户，可换一种问法（例如去掉品牌对比、功效或健康相关表述）后再试。",
+        en: "Amazon Alexa (Rufus) declined to answer this question; its wording is in the message. This request was not billed. Retrying the same prompt will be declined again, so do not retry automatically. Tell the user and suggest rephrasing (e.g. without brand comparisons, efficacy or health claims).",
       });
     case "SERVER":
       return t({

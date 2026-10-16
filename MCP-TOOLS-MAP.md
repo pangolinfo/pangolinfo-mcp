@@ -26,7 +26,7 @@
 | `list_seller_products` | 卖家店铺全部商品 | `sellerId` | 1pt / ~5s |
 | `list_category_products` | 类目下具体商品分页 | `nodeId` | 1pt / ~5s |
 | `scrape_url` | 高级逃生口:content 零件或完整 url + parserName 抓非标准页 | `parserName` + (`content` 或 `url`) | 1pt / ~5s |
-| `search_amazon_alexa` | 自然语言问 Amazon Rufus AI 拿分组推荐 | `prompts[]` | **6pt/次** / ~30s |
+| `search_amazon_alexa` | 自然语言问 Amazon Rufus AI 拿分组推荐 | `prompts[]` | **6pt/答出的轮**（拒答/失败不计费，全拒答=9207） / ~30s |
 | `get_amazon_alexa_questions` | Alexa Listing API：提取 ASIN 绑定的 PDP 两区预设问题，可选获取答案 | `asin` 或 `url` | **0/5/25/45pt** / 慢任务 |
 
 `scrape_url` 使用 `parserName=amzFollowSeller` 时会调用专用跟卖接口。返回 `items[]` 的 `soldBy` 为卖家名，`hasSoldByLink` 明确区分卖家名是超链接（`true`）还是纯文本（`false`），`isFeatured` 标识置顶报价。

@@ -59,3 +59,29 @@ test("missing marketplace ASIN preserves 9204 message and charge without retry",
   setLocale("zh");
   assert.match(hintFor("ASIN_UNAVAILABLE"), /计费.*请勿自动重试/);
 });
+
+test("Alexa refusal (9207) is terminal, unbilled and keeps Amazon's wording", async () => {
+  let calls = 0;
+  const message = "Amazon declined to answer: その質問にはお答えできません。";
+  const client = new PangolinfoClient({
+    apiKey: "test-only", baseUrl: "https://example.invalid",
+    fetchImpl: async () => {
+      calls++;
+      return new Response(JSON.stringify({ code: 9207, message }), {
+        status: 200, headers: { "Content-Type": "application/json" },
+      });
+    },
+  });
+  await assert.rejects(client.post("/api/v2/scrape", {}), (error: unknown) => {
+    assert.ok(error instanceof PangolinfoError);
+    assert.equal(error.code, "ALEXA_REFUSED");
+    assert.equal(error.retriable, false);
+    assert.equal(error.message, message);
+    return true;
+  });
+  assert.equal(calls, 1);
+  setLocale("en");
+  assert.match(hintFor("ALEXA_REFUSED"), /not billed.*do not retry automatically/);
+  setLocale("zh");
+  assert.match(hintFor("ALEXA_REFUSED"), /未计费.*不要自动重试/);
+});
