@@ -40,13 +40,13 @@ Use when: 报告/分析里需要展示类目上下文（不是裸 ID）；用户
 Don't use: 只有一个 ID 时其实用不上（其他 tool 返回里通常已带 browseNodeNamePath）；想看类目树结构（用 get_category_children）。
 Returns: data.items[{ categoryId, categoryName, categoryNameCn, browseNodeNamePaths[], browseNodeNamePathCns[] }] —— 输入数组多大就返回多大。
 Pair with: ↑ categoryIds 从任何前一步拿（filter_niches/filter_categories 的输出、用户粘的 ID 列表）；↓ 主要给人看，下游链路通常不依赖。
-Cost: ~1 积点/次, ~2s（批量解析比单调多次便宜）。`,
+Cost: 2 积点/次, ~2s（一次可批量解析）。`,
     en: `[Amazon category breadcrumb resolver] Batch-resolve categoryId list to full paths (e.g. 'Electronics > Headphones > Over-Ear Headphones').
 Use when: a report needs readable category context (not bare IDs); user has a list of numeric IDs and wants the names; multiple categories need labels for comparison.
 Don't use: for a single ID — most other tools already return browseNodeNamePath in their responses; for tree structure (use get_category_children).
 Returns: data.items[{ categoryId, categoryName, categoryNameCn, browseNodeNamePaths[], browseNodeNamePathCns[] }] — one row per input ID.
 Pair with: ↑ categoryIds from any prior step (filter_niches/filter_categories output, user-pasted ID list); ↓ usually presentation-only, downstream rarely depends on it.
-Cost: ~1 point/call, ~2s (cheaper than N single resolutions).`,
+Cost: 2 points/call, ~2s (batch resolution supported).`,
   }),
   inputSchema,
   async execute(input, ctx) {

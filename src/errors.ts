@@ -27,6 +27,8 @@ export type PangolinfoErrorCode =
   | "QUOTA"
   | "RATE_LIMIT"
   | "BAD_INPUT"
+  | "PRODUCT_NOT_FOUND"
+  | "OUTCOME_UNKNOWN"
   | "ASIN_REDIRECTED"
   | "ASIN_UNAVAILABLE"
   | "ALEXA_REFUSED"
@@ -131,6 +133,9 @@ export function codeFromBizCode(bizCode: number): PangolinfoErrorCode {
     case 4030: // SERVICE_BUSY
       return "RATE_LIMIT";
 
+    case 8000: // Revenue Calculator productmatch found no product — unbilled, same input is terminal
+      return "PRODUCT_NOT_FOUND";
+
     // 9xxx 第三方服务异常
     case 9100: // AMZSCOPE_API_DISABLED — transient
     case 9101: // AMZSCOPE_SERVICE_UNAVAILABLE — transient
@@ -143,7 +148,7 @@ export function codeFromBizCode(bizCode: number): PangolinfoErrorCode {
       return "BAD_INPUT";
     case 9202: // REVIEW_SITE_UNDER_MAINTENANCE — terminal for this site
       return "BAD_INPUT";
-    case 9206: // Confirmed follow-seller ASIN redirect — charged, never auto-retry
+    case 9206: // Confirmed ASIN redirect (follow-seller or empty reviews) — charged, never auto-retry
       return "ASIN_REDIRECTED";
     case 9204: // ASIN missing/mismatched on the requested marketplace — terminal and billed
       return "ASIN_UNAVAILABLE";
@@ -212,6 +217,16 @@ export function hintFor(code: PangolinfoErrorCode): string {
       return t({
         zh: "商品已重定向，目标 ASIN 见返回消息。本次已按正常请求计费；不要自动重试原 ASIN，也不要自动请求目标 ASIN 造成再次扣费。请告知用户，由用户决定是否查询目标商品。",
         en: "The product redirected; the destination ASIN is in the message. This request was billed normally. Do not automatically retry the original ASIN or query the destination and incur another charge. Let the user decide whether to query that product.",
+      });
+    case "PRODUCT_NOT_FOUND":
+      return t({
+        zh: "未找到该商品，本次未计费。请核对 ASIN 和国家站点；不要自动重试相同参数。",
+        en: "Product not found; this request was not billed. Check the ASIN and marketplace. Do not automatically retry the same input.",
+      });
+    case "OUTCOME_UNKNOWN":
+      return t({
+        zh: "利润计算未收到完整结果，无法确认后台是否已完成及扣费。请勿自动重试；先核对调用与积分记录，必要时联系支持确认，再由用户决定是否重新提交。",
+        en: "No complete profit result was received; completion and billing are unknown. Do not automatically retry. Check call and credit records or contact support, then let the user decide whether to submit again.",
       });
     case "ASIN_UNAVAILABLE":
       return t({

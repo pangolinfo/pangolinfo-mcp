@@ -25,8 +25,8 @@ const inputSchema = z.object({
     .default("summary")
     .describe(
       t({
-        zh: "'summary' 返回工具清单 + 典型链路（默认，省 token）；'full' 把 20 个 tool 的完整 description 也一并展开（第一次接入或上下文不紧时用）。",
-        en: "'summary' returns tool catalog + canonical workflows (default, token-light); 'full' also expands all 20 tool descriptions (use on first integration or when context budget allows).",
+        zh: "'summary' 返回工具清单 + 典型链路（默认，省 token）；'full' 一并展开当前工具的完整 description（第一次接入或上下文不紧时用）。",
+        en: "'summary' returns tool catalog + canonical workflows (default, token-light); 'full' also expands all current tool descriptions (use on first integration or when context budget allows).",
       }),
     ),
 });
@@ -39,6 +39,18 @@ interface ToolMeta {
 }
 
 const TOOL_META: ToolMeta[] = [
+  {
+    name: "calculate_amazon_profit",
+    cost: "5pt/call",
+    domain: "amazon",
+    oneLiner: { zh: "Amazon美日站FBA/自配送费用、利润和利润率", en: "Amazon US/JP FBA/MFN fees, profit and margin" },
+  },
+  {
+    name: "collect_ecommerce_data",
+    cost: "0.8pt/product or unique review",
+    domain: "ecommerce",
+    oneLiner: { zh: "7个电商平台的商品详情、评分汇总和买家评论", en: "Product details, aggregate ratings and buyer reviews across 7 ecommerce platforms" },
+  },
   {
     name: "search_amazon",
     cost: "1pt/~5s",
@@ -113,7 +125,7 @@ const TOOL_META: ToolMeta[] = [
   },
   {
     name: "search_categories",
-    cost: "1pt/~3s",
+    cost: "2pt/~3s",
     domain: "amazon-niche",
     oneLiner: {
       zh: "按关键词搜 Amazon 类目树",
@@ -122,7 +134,7 @@ const TOOL_META: ToolMeta[] = [
   },
   {
     name: "get_category_children",
-    cost: "1pt/~3s",
+    cost: "2pt/~3s",
     domain: "amazon-niche",
     oneLiner: {
       zh: "类目树下钻列子类目",
@@ -131,7 +143,7 @@ const TOOL_META: ToolMeta[] = [
   },
   {
     name: "filter_categories",
-    cost: "1pt/~5s",
+    cost: "5pt/~5s",
     domain: "amazon-niche",
     oneLiner: {
       zh: "按 30+ 商业指标筛/详情类目",
@@ -140,7 +152,7 @@ const TOOL_META: ToolMeta[] = [
   },
   {
     name: "filter_niches",
-    cost: "1pt/~5s",
+    cost: "10pt/~5s",
     domain: "amazon-niche",
     oneLiner: {
       zh: "按 50+ 指标筛/详情 Amazon Niche",
@@ -149,20 +161,11 @@ const TOOL_META: ToolMeta[] = [
   },
   {
     name: "get_category_paths",
-    cost: "1pt/~2s",
+    cost: "2pt/~2s",
     domain: "amazon-niche",
     oneLiner: {
       zh: "批量解析 categoryId → 面包屑",
       en: "Batch resolve categoryIds to breadcrumb paths",
-    },
-  },
-  {
-    name: "search_local_maps",
-    cost: "1.5pt/~5s",
-    domain: "google",
-    oneLiner: {
-      zh: "Google Maps 本地商家搜索",
-      en: "Google Maps local-business search",
     },
   },
   {
@@ -181,15 +184,6 @@ const TOOL_META: ToolMeta[] = [
     oneLiner: {
       zh: "Google Trends 关键词热度对比",
       en: "Google Trends keyword popularity comparison",
-    },
-  },
-  {
-    name: "wipo_search",
-    cost: "2pt/~5s (+12 当开 enableLitigation 且查到专利)",
-    domain: "ip",
-    oneLiner: {
-      zh: "WIPO 全球外观设计检索，可选 enableLitigation 联动美国专利诉讼",
-      en: "WIPO global design search, optional enableLitigation chains US patent litigation",
     },
   },
   {
@@ -232,7 +226,7 @@ const WORKFLOWS = [
       "list_category_products",
       "get_amazon_product",
       "get_amazon_reviews",
-      "wipo_search",
+      "calculate_amazon_profit",
     ],
     note: {
       zh: "标准 GTM SOP。filter_niches 用 nicheId 当详情接口取深度报告。",
@@ -269,27 +263,6 @@ const WORKFLOWS = [
     },
   },
   {
-    title: { zh: "⚖️ 立项前 IP 风险排查", en: "⚖️ Pre-launch IP risk clearance" },
-    steps: [
-      "wipo_search (source='USID', hol='<brand>')",
-      "wipo_search (source='CNID', prod='<product>' + rd='2024')",
-    ],
-    note: {
-      zh: "美国看 USPTO 外观（USID），中国看 CNID（必须配 rd/status/lcs 至少一项，否则全表扫描被拒）。",
-      en: "USPTO designs via USID; China designs via CNID (pair with rd/status/lcs to avoid full-scan rejection).",
-    },
-  },
-  {
-    title: { zh: "⚖️ 专利侵权诉讼闭环（一次调用）", en: "⚖️ Patent-litigation loop (single call)" },
-    steps: [
-      "wipo_search (source='USID', prod='<product>', enableLitigation=true)  // 专利 + 关联美国诉讼一次直出",
-    ],
-    note: {
-      zh: "开 enableLitigation=true，wipo_search 会在命中专利后自动用专利号联动查美国诉讼（底层 PACER），每条命中专利直接带 litigationStatus / caseTotal / cases[]（案件进展、原被告、docket 流水），一次调用形成端到端 IP 风险闭环。仅查到专利才 +12 积点。",
-      en: "With enableLitigation=true, after wipo_search matches patents it auto-chains a US litigation lookup (PACER backend) by patent number; each matched patent directly carries litigationStatus / caseTotal / cases[] (case status, parties, docket timeline) — an end-to-end IP-risk loop in one call. +12 points only when a patent is found.",
-    },
-  },
-  {
     title: { zh: "🏪 卖家/品牌画像", en: "🏪 Seller / brand profiling" },
     steps: [
       "get_amazon_product (get seller.id from a known ASIN)",
@@ -304,8 +277,8 @@ const WORKFLOWS = [
 
 const TIPS = [
   {
-    zh: "成本意识：wipo_search 开 enableLitigation 且查到专利最贵(基础 2 + 诉讼 12 = 14 积点/次)，get_amazon_reviews 次之(5 积点/页)，其他多数 1-2 积点。批量抓评论前先 pageCount=1 探。",
-    en: "Cost awareness: wipo_search with enableLitigation on a matched patent is priciest (base 2 + litigation 12 = 14pt/call), get_amazon_reviews next (5pt/page), most others 1-2pt. Probe with pageCount=1 before scaling.",
+    zh: "利润计算每次5积点；Amazon评论每页5积点，先取一页再扩大范围。电商Product每商品0.8积点，Reviews每条唯一评论0.8积点。",
+    en: "Profit calculations cost 5 points; Amazon reviews cost 5 points/page. Start with one review page before scaling. Ecommerce Product costs 0.8 points/product and Reviews cost 0.8 points/unique review.",
   },
   {
     zh: "格式选择：search_amazon / get_amazon_product 默认 format='json' 取结构化字段；只在用户明确要原始页时切 'markdown'。",
@@ -314,10 +287,6 @@ const TIPS = [
   {
     zh: "类目路径：用户给关键词 → search_categories；用户给 ID → 直接喂下游或用 get_category_paths 换面包屑；想下钻 → get_category_children。",
     en: "Category routing: user gives keyword → search_categories; user gives ID → feed downstream directly or use get_category_paths for breadcrumbs; want to drill → get_category_children.",
-  },
-  {
-    zh: "WIPO 性能契约：CNID + 模糊 (hol/prod) 必须配 id/idSearch/rd/status/lcs；USID 无 STATUS；JPID 无 HOL/PROD；ed 永远被忽略。",
-    en: "WIPO perf contract: CNID + fuzzy (hol/prod) MUST pair with id/idSearch/rd/status/lcs; USID has no STATUS; JPID has no HOL/PROD; ed is always ignored.",
   },
 ];
 
@@ -342,7 +311,9 @@ Cost: 0 points (local data, no backend round-trip).`,
     const locale = getLocale();
     const isZh = locale === "zh";
 
-    const liveTools = TOOL_META.map((m) => ({
+    const { tools } = await import("./index.js");
+    const registeredNames = new Set(tools.map(tool => tool.name));
+    const liveTools = TOOL_META.filter(m => registeredNames.has(m.name)).map((m) => ({
       name: m.name,
       domain: m.domain,
       cost: m.cost,
@@ -366,8 +337,8 @@ Cost: 0 points (local data, no backend round-trip).`,
       //     this self-introspection tool itself).
       //   - businessToolCount: tools that actually call the backend
       //     (excludes pangolinfo_capabilities). Equals liveTools.length.
-      wireTotalCount: TOOL_META.length + 1,
-      businessToolCount: TOOL_META.length,
+      wireTotalCount: tools.length,
+      businessToolCount: liveTools.length,
       liveTools,
       workflows,
       tips,
@@ -381,7 +352,6 @@ Cost: 0 points (local data, no backend round-trip).`,
     // tool. We resolve them lazily here (rather than importing all
     // tools at top-level) to keep this file decoupled from the registry
     // — index.ts already wires the canonical list.
-    const { tools } = await import("./index.js");
     const fullDescriptions = tools.map((tool) => ({
       name: tool.name,
       description: tool.description,

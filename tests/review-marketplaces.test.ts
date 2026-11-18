@@ -66,3 +66,18 @@ test("Japan review request maps to co.jp and retains V1 parser and filters", asy
     format: "json", formatType: "all_formats", mediaType: "media_reviews_only", parserName: "amzReviewV2",
   }]]);
 });
+
+test("review output preserves native dates, actual countries and unknown empty fields", async () => {
+  for (const [site, date, country] of [
+    ["amz_jp", "2026年7月16日", "日本"],
+    ["amz_es", "1 de noviembre de 2026", "España"],
+    ["amz_br", "20 de outubro de 2026", "Brasil"],
+    ["amz_eg", "11 July 2023", "United Arab Emirates"],
+    ["amz_jp", "", ""],
+  ] as const) {
+    const result = { data: { json: [{ data: { results: [{ date, country }] } }] } };
+    const ctx = { logger: { info() {} }, client: { post: async () => result } } as any;
+    const input = getAmazonReviews.inputSchema.parse({ asin: "B073JWXGNT", site });
+    assert.equal(await getAmazonReviews.execute(input, ctx), result);
+  }
+});

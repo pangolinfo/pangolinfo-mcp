@@ -21,6 +21,11 @@ export interface PangolinfoClientOptions {
   clientSource?: "mcp" | "skill";
 }
 
+/** An explicit local wait budget; does not imply a backend deadline or cancellation. */
+export interface RequestOptions {
+  deadlineMs: number;
+}
+
 export class PangolinfoClient {
   private readonly apiKey: string;
   private readonly baseUrl: string;
@@ -53,8 +58,8 @@ export class PangolinfoClient {
     };
   }
 
-  async post(path: string, body: unknown): Promise<unknown> {
-    return this.request("POST", path, body);
+  async post(path: string, body: unknown, timeout?: number | RequestOptions): Promise<unknown> {
+    return this.request("POST", path, body, timeout);
   }
 
   async get(path: string): Promise<unknown> {
@@ -65,6 +70,7 @@ export class PangolinfoClient {
     method: "GET" | "POST",
     path: string,
     body?: unknown,
+    timeout?: number | RequestOptions,
   ): Promise<unknown> {
     const url = `${this.baseUrl}${path.startsWith("/") ? path : `/${path}`}`;
 
@@ -79,7 +85,10 @@ export class PangolinfoClient {
     // so we always give the backend a chance to return its OWN structured
     // error before we pull the plug. Tools without a body.timeout (the
     // amzscope filter/category endpoints) get the DEFAULT_FLOOR.
-    const deadlineMs = deriveTimeoutMs(body);
+    // Collector使用请求头传超时，不向原生body注入额外字段；客户端给后端额外15秒返回余量。
+    const collectionTimeoutMs = typeof timeout === "number" ? timeout : undefined;
+    const deadlineMs = typeof timeout === "object" ? timeout.deadlineMs
+      : collectionTimeoutMs === undefined ? deriveTimeoutMs(body) : collectionTimeoutMs + 15_000;
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), deadlineMs);
 
@@ -87,7 +96,7 @@ export class PangolinfoClient {
     try {
       res = await this.fetchImpl(url, {
         method,
-        headers: this.headers(),
+        headers: { ...this.headers(), ...(collectionTimeoutMs === undefined ? {} : { "X-Timeout-Ms": String(collectionTimeoutMs) }) },
         body: body === undefined ? undefined : JSON.stringify(body),
         signal: controller.signal,
       });

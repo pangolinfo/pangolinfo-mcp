@@ -40,13 +40,13 @@ Use when: 用户给的是关键词而非类目 ID，下游需要 categoryId / br
 Don't use: 已经有 categoryId/nodeId（直接用 get_category_paths 取面包屑或下游 filter）；想树状下钻看子类目（用 get_category_children）。
 Returns: data.items.data[{ browseNodeId, browseNodeIdPath, browseNodeName, browseNodeNameCn, browseNodeNamePath, browseNodeNamePathCn, parentBrowseNodeIdPath, productType, sellable, hasChild }] + pagination。
 Pair with: ↓ 拿到 browseNodeId 后喂 list_category_products / list_bestsellers (用 path 推 slug) / filter_niches / filter_categories；↓ 喂 get_category_children 继续下钻；↓ 喂 get_category_paths 取面包屑。
-Cost: ~1 积点/次, ~3s。`,
+Cost: 2 积点/次, ~3s。`,
     en: `[Amazon category search] Match Amazon's category tree by keyword (Chinese or English) and return candidate nodes.
 Use when: user gave a keyword/concept rather than a category id, and a downstream tool needs categoryId / browseNodeId (e.g. filter_niches / filter_categories / list_category_products / inferring list_bestsellers slug); when you need to know where a product concept lives in Amazon's taxonomy.
 Don't use: when you already have categoryId/nodeId (use get_category_paths for breadcrumbs or a downstream filter directly); when you want to drill the subtree (use get_category_children).
 Returns: data.items.data[{ browseNodeId, browseNodeIdPath, browseNodeName, browseNodeNameCn, browseNodeNamePath, browseNodeNamePathCn, parentBrowseNodeIdPath, productType, sellable, hasChild }] + pagination.
 Pair with: ↓ feed browseNodeId into list_category_products / list_bestsellers (derive slug from path) / filter_niches / filter_categories; ↓ feed into get_category_children to drill further; ↓ feed into get_category_paths for breadcrumbs.
-Cost: ~1 point/call, ~3s.`,
+Cost: 2 points/call, ~3s.`,
   }),
   inputSchema,
   async execute(input, ctx) {

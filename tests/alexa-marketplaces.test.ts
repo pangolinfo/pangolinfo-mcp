@@ -14,3 +14,11 @@ test("Alexa defaults to US and forwards top-level site plus native mode", async 
   assert.equal(calls[1][1].scrapeContext.alexaMode, "playwright");
   assert.throws(() => searchAmazonAlexa.inputSchema.parse({ prompts: ["question"], site: "de" }));
 });
+
+test("Alexa forwards an optional book ASIN and product URL without dropping leading zeroes", async () => {
+  let body: any;
+  const ctx = { logger: { info() {} }, client: { post: async (_path: string, input: any) => { body = input; return {}; } } } as any;
+  await searchAmazonAlexa.execute(searchAmazonAlexa.inputSchema.parse({ prompts: ["Who wrote this book?"], asin: "0008610673", url: "https://www.amazon.com/dp/0008610673" }), ctx);
+  assert.equal(body.asin, "0008610673");
+  assert.equal(body.url, "https://www.amazon.com/dp/0008610673");
+});

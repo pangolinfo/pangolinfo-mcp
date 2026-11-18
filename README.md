@@ -1,39 +1,18 @@
-# pangolinfo-mcp
+# Pangolinfo MCP
 
-> Pangolinfo MCP server — **18 Amazon e-commerce & IP data tools** for AI assistants via [Model Context Protocol](https://modelcontextprotocol.io).
+One MCP service for synchronous Amazon research, ecommerce Product and Reviews, AI search, keyword trends and profit calculations.
 
-**🔗 Official site: [www.pangolinfo.com](https://tool.pangolinfo.com/#/en/system/loading?sourceTag=github_amz)**
+- **Version:** 0.10.0
+- **Tools:** 21 total: 20 business tools and free local `pangolinfo_capabilities`.
+- **Hosted endpoint:** `https://mcp.pangolinfo.com/mcp` (Streamable HTTP).
+- **Authentication:** your Pangolinfo API key; existing endpoint and client configuration remain valid.
+- **Scope:** seven ecommerce platforms, existing Amazon/category/niche tools and V1/V2 synchronous APIs. Social media, all V3 APIs and asynchronous jobs/callbacks/polling are excluded.
 
-Plug your favorite AI client (Claude Code, Cursor, Cline, Windsurf, Codex, Hermes, OpenClaw) into Pangolinfo's Amazon Scraper APIs and let the AI run **real-time ad tracking**, **Sponsored Products** analysis, **VOC sentiment analysis**, **keyword monitoring**, and **competitor product audit** — plus keyword research, listing analysis, review mining, niche discovery, category navigation, AI search lookups, keyword-trend checks, and WIPO trademark clearance — all from natural-language instructions.
+## Upgrade from 0.9.x
 
-> ⚠️ **BREAKING CHANGE in 0.7.0 — `pacer_search` retired, merged into `wipo_search`**
->
-> The standalone `pacer_search` tool was removed. US patent-litigation (PACER) lookups
-> are now reached by passing `enableLitigation=true` to `wipo_search` — it finds the patent
-> and joins the related US litigation cases in a single call. Prompts/scripts pinning
-> `pacer_search` will get `ToolNotFound`; switch to `wipo_search` with `enableLitigation`.
->
-> <details><summary>Earlier breaking change (0.3.0 — tool renames)</summary>
->
-> | Old name (≤ 0.2.x) | New name (0.3.0+) |
-> | --- | --- |
-> | `google_ai_search` | `ai_search` |
-> | `google_trends` | `keyword_trends` |
->
-> Tool names changed to remove third-party brand references from the public MCP interface.
-> Tool parameters, return shape, and pricing are unchanged.
-> </details>
+`collect_social_data`, `search_naver_cafe`, `search_local_maps` and `wipo_search` are no longer registered. Refresh your client's tool cache. The independent VOC Insight MCP is retired; its social/brand/report/persona tools are not migrated here. REST services and stored data are unchanged.
 
-| | |
-|---|---|
-| **Version** | `0.7.3` |
-| **Tools** | 18 business tools (+ a free local `pangolinfo_capabilities` introspection call) |
-| **Transport** | stdio (local) · streamable HTTP (hosted — see below) |
-| **Runtime** | Node.js 18+ |
-| **License** | MIT |
-| **Get an API key** | <https://tool.pangolinfo.com/#/en/system/loading?sourceTag=github_amz> |
-
----
+`calculate_amazon_profit` is new. `collect_ecommerce_data` exposes seven platforms with `product-detail` and `reviews`. Use Product for combined details and aggregate ratings; Shopify and the legacy `product-summary` operation are outside this MCP catalog.
 
 ## Install
 
@@ -91,7 +70,7 @@ Then wire it into your AI client — see the per-client snippets below. Point `a
 
 1. Sign up at <https://tool.pangolinfo.com/#/en/system/loading?sourceTag=github_amz>
 2. Copy your `pgl_xxxxxxxx` key from the dashboard
-3. Top up credits if needed (each Amazon Scraper API call costs 0.75 credits; `pangolinfo_capabilities` is free)
+3. Top up credits if needed (charges depend on the data tool and format; `pangolinfo_capabilities` is free)
 
 ---
 
@@ -266,34 +245,55 @@ If you're calling the endpoint directly (not through a standard MCP client):
 
 ---
 
-## Tools (20)
+## Tools (21 total)
 
-See [`MCP-TOOLS-MAP.md`](./MCP-TOOLS-MAP.md) for the full coordination graph (which tools chain into which).
+| Tool | Capability | Points |
+| --- | --- | --- |
+| `pangolinfo_capabilities` | Current catalog and workflows; no backend call | Free |
+| `search_amazon` | Amazon keyword search | JSON 1/page; rawHtml/markdown 0.75/page |
+| `get_amazon_product` | Amazon product details | JSON 1/page; rawHtml/markdown 0.75/page |
+| `get_amazon_delivery_time` | Product details plus delivery estimates | 2 |
+| `get_amazon_reviews` | Amazon buyer reviews | 5/page |
+| `list_bestsellers` | Best sellers | JSON 1/page; rawHtml/markdown 0.75/page |
+| `list_new_releases` | New releases | JSON 1/page; rawHtml/markdown 0.75/page |
+| `list_seller_products` | Seller listings | JSON 1/page; rawHtml/markdown 0.75/page |
+| `list_category_products` | Category listings | JSON 1/page; rawHtml/markdown 0.75/page |
+| `search_categories` | Category keyword search | 2/call |
+| `get_category_children` | Category children | 2/call |
+| `filter_categories` | Category analytics | 5/call |
+| `filter_niches` | Niche analytics | 10/call |
+| `get_category_paths` | Category breadcrumb paths | 2/call |
+| `ai_search` | AI Overview / AI Mode | 2 |
+| `keyword_trends` | Keyword trends | 1.5 |
+| `scrape_url` | Generic Amazon pages; includes competing offers | Format/parser-specific; offers 1 |
+| `search_amazon_alexa` | Alexa Agent answers | 6/answered turn |
+| `get_amazon_alexa_questions` | Alexa Listing questions and answers | 0/5 discovery + 20/answered region, max 45 |
+| `collect_ecommerce_data` | Seven-platform Product and Reviews | 0.8/product or unique review |
+| `calculate_amazon_profit` | US/JP FBA and merchant-fulfilled fees, profit and margin | 5 |
 
-| # | Tool | Purpose | Cost (credits) |
-|---|---|---|---|
-| 1 | `search_amazon` | Amazon keyword search → structured product list | 0.75 |
-| 2 | `get_amazon_product` | Single-ASIN listing detail (title / bullets / features / videos with `type` + `section` / aiReviewsSummary) | 0.75 |
-| 3 | `get_amazon_delivery_time` | Single-ASIN listing detail with destination-specific delivery estimates | 2 |
-| 4 | `get_amazon_reviews` | Batch reviews for an ASIN (VOC mining); 14 marketplaces including France (`site: "amz_fr"` → `www.amazon.fr`), Italy (`amz_it`), Spain (`amz_es`), Brazil (`amz_br` → `www.amazon.com.br`) and Japan (`amz_jp`) | 0.75 |
-| 5 | `list_bestsellers` | Amazon Bestsellers by category | 0.75 |
-| 6 | `list_new_releases` | Amazon New Releases by category | 0.75 |
-| 7 | `list_seller_products` | Catalog of products under one seller | 0.75 |
-| 8 | `list_category_products` | All products in a category leaf | 0.75 |
-| 9 | `search_categories` | Search Amazon category tree by keyword | 0.75 |
-| 10 | `get_category_children` | Drill down one level in the category tree | 0.75 |
-| 11 | `filter_categories` | Filter category nodes by criteria | 0.75 |
-| 12 | `filter_niches` | Niche discovery (size × competition × growth) | 0.75 |
-| 13 | `get_category_paths` | Resolve full ancestor paths for a category node | 0.75 |
-| 14 | `search_local_maps` | Google Maps local business search | 0.75 |
-| 15 | `wipo_search` | WIPO global design / trademark search (IP clearance). Set `enableLitigation=true` to also join related US patent-litigation (PACER) cases in the same call | 2 (+12 when `enableLitigation` finds a patent) |
-| 16 | `ai_search` | AI Search via Google SERP (AI Overview + organic, with compliance disclaimer) | 2 |
-| 17 | `keyword_trends` | Keyword Trends via Google Trends (with compliance disclaimer) | 1.5 |
-| 18 | `scrape_url` | Power-user escape hatch: scrape a raw Amazon URL + parserName (non-standard pages) | 0.75 |
-| 19 | `search_amazon_alexa` | Amazon Rufus AI conversational product picks (scene-based, no keyword) | 6 |
-| 20 | `get_amazon_alexa_questions` | Alexa Listing API: extract ASIN-bound PDP preset questions; optionally answer each | 0/5 discovery outcome + 20/answered region (max 45) |
+Billing follows the corresponding REST API rules. Preserve `pointCost` when returned; an absent field does not mean zero cost. Revenue Calculator does not return `pointCost` and costs a fixed 5 points per successful call. Unavailable-ASIN and redirect outcomes have their own billing rules.
+
+### Profit example
+
+```json
+{"asin":"B07FZ8S74R","country":"US"}
+```
+
+`country` accepts US/JP, case-insensitively. Optional prices, shipping, package dimensions/weight and `programs` follow the [Revenue Calculator API](https://docs.pangolinfo.com/en-api-reference/revenueCalculatorApi/revenueCalculatorAPI). Returns `code`, `message` and `data` containing `summary`, `product` and `raw`; there is no `pointCost` field. Product-not-found code `8000` is unbilled and maps to `PRODUCT_NOT_FOUND`, `retriable=no`; check ASIN and marketplace before changing the request.
+
+Profit calculation has a 180-second local wait budget; allow at least 210 seconds in your MCP client. This budget is not a bound on backend retries and cannot override a gateway timeout. A timeout, connection failure or HTTP 5xx maps to `OUTCOME_UNKNOWN`, `retriable=no`: completion and billing are unknown. Check call/credit records before deciding to submit again. A confirmed business failure keeps its normal classification. Before release, verify both the client-to-MCP and MCP-to-REST gateway limits; increasing this local budget alone cannot guarantee delivery or backend cancellation.
+
+### Ecommerce example
+
+```json
+{"platform":"walmart","operation":"product-detail","country":"US","productId":"103158059"}
+```
+
+Product combines details and aggregate ratings; Reviews returns buyer reviews. See [ecommerce parameters](docs/review-collection.md) and the [MCP tool reference](https://docs.pangolinfo.com/en-help-center/mcp/tools).
 
 For competing offers, call `scrape_url` with `parserName=amzFollowSeller` and either an ASIN in `content` or an Amazon product URL. Each returned item includes `soldBy`, `hasSoldByLink` (linked seller name vs. plain text), and optional `isFeatured` for the featured offer.
+
+Review code `9206` confirms an ASIN redirect (for example `B0GGC6B8ZD` → `B000XH82O6`). MCP reports `ASIN_REDIRECTED`, `retriable=no`, preserving the destination message and `pointCost`. The original review request is billed normally. Empty review pages may trigger an additional product-page verification, which adds latency but has no separate charge. Do not automatically retry or fetch the destination ASIN.
 
 Follow Seller code `9206` means a confirmed product redirect and is billed as a normal request (usually 1 credit; see `pointCost`). `message` contains the destination, for example `Redirected to ASIN B0DSHTVHNZ`. `data.json` retains the empty result for the original request; the destination product is not queried automatically. Do not automatically retry the original ASIN. Query the destination separately only after confirming it; that request is billed separately. Fetch failures, mismatched delivery destinations, and unconfirmed redirects remain `9200` without a charge. MCP reports `[ASIN_REDIRECTED]` with `retriable=no` and preserves the backend message and `pointCost` in error details.
 
@@ -301,9 +301,11 @@ When the product-detail check explicitly confirms that the requested ASIN is mis
 
 `search_amazon_alexa` returns a `status` on every turn: `answered`, `refused` (Amazon declined the question; `content` and `products` are empty and `refusal_message` holds Amazon's wording, e.g. `その質問にはお答えできません。`) or `failed`. Only answered turns are billed (6 credits each). When Amazon declines every turn the call fails with `ALEXA_REFUSED` (code `9207`, not billed, `retriable=no`); the same prompt will be declined again, so rephrase it rather than retrying.
 
+US `search_amazon_alexa` queries optionally accept `asin` or a product `url`; both must identify the same product when supplied together. The response includes `asin` and `context_source: "product_page"` only after the real Amazon PDP request context is verified. The product panel is used without requiring inline preset-question buttons. `get_amazon_alexa_questions` falls back to initial side-panel suggestions when both inline regions are empty; these appear in `regions.panel` with `source: "panel"`. With `region: "all"`, panel answers count as one answer region (25 credits including discovery); no available suggestions costs zero.
+
 For product subtitles/highlights, read `get_amazon_product` JSON at `data.json[0].data.results[0].itemHighlights`. The parser normalizes the dedicated subtitle, the main-title suffix, or an already parsed `Item Highlight(s)` attribute into this string; it is empty when unavailable. Markdown conversion is not required.
 
-> **Plus a free local call:** `pangolinfo_capabilities` returns the full tool catalog, canonical workflows, and usage tips with no backend round-trip (**0** credits). It is a self-introspection helper, not one of the 20 data tools.
+> **Plus a free local call:** `pangolinfo_capabilities` returns the full tool catalog, canonical workflows, and usage tips with no backend round-trip (**0** credits). It is a self-introspection helper, one of the 21 registered tools, alongside 20 business tools.
 
 Default marketplace is **Amazon US** (`marketplaceId=ATVPDKIKX0DER`, `zip=90001`). Override per call via tool arguments.
 
@@ -375,7 +377,7 @@ After restarting your AI client, ask it:
 
 > List all available `pangolinfo` MCP tools.
 
-You should see 18 tools. Then try:
+You should see 21 tools (20 business tools plus free introspection). Then try:
 
 > Use `pangolinfo_capabilities` with mode "summary".
 
@@ -409,7 +411,7 @@ src/
 ├── i18n.ts             zh/en translation lookup
 └── tools/
     ├── _types.ts             Tool / ToolContext type definitions
-    ├── index.ts              Tool registry (18 tools + capabilities)
+    ├── index.ts              Tool registry (21 total: 20 business + capabilities)
     └── <verb_noun>.ts        One file per tool
 ```
 
@@ -428,7 +430,7 @@ src/
 We take operator and user safety seriously. By design, this MCP server:
 
 - **Brings your own key.** Authentication is via your personal `PANGOLINFO_API_KEY` (issued at <https://tool.pangolinfo.com/#/en/system/loading?sourceTag=github_amz>). The key is read locally from your AI client's config or environment — it is never transmitted anywhere except to `https://scrapeapi.pangolinfo.com` (or `https://mcp.pangolinfo.com` for the hosted variant) over TLS 1.2+.
-- **No telemetry.** This server does not phone home, does not collect usage analytics, and does not log your prompts. The only outbound traffic is the actual Amazon / Google / WIPO Scraper API calls you explicitly invoke through tools.
+- **No telemetry.** This server does not phone home, does not collect usage analytics, and does not log your prompts. The only outbound traffic is the Amazon / ecommerce / search data API calls you explicitly invoke through tools.
 - **No PII collection.** No user account info, no email, no IP geolocation, and no prompt content is persisted by this server. Tool calls forward only the parameters you (or the AI agent) supplied.
 - **Read-only.** Every tool is a strictly read-only data lookup. None of them can write to Amazon, place orders, post reviews, modify listings, or take any side-effecting action on third-party platforms.
 - **HTTPS-only transport.** Both the stdio variant (local) and the hosted variant (`https://mcp.pangolinfo.com/mcp`) require HTTPS; HTTP requests are refused.

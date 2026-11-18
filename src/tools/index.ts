@@ -21,25 +21,26 @@ import { getCategoryChildren } from "./get_category_children.js";
 import { filterCategories } from "./filter_categories.js";
 import { filterNiches } from "./filter_niches.js";
 import { getCategoryPaths } from "./get_category_paths.js";
-import { searchLocalMaps } from "./search_local_maps.js";
-import { wipoSearch } from "./wipo_search.js";
+import { calculateAmazonProfit } from "./calculate_amazon_profit.js";
 import { aiSearch } from "./ai_search.js";
 import { keywordTrends } from "./keyword_trends.js";
 import { scrapeUrl } from "./scrape_url.js";
 import { searchAmazonAlexa } from "./search_amazon_alexa.js";
 import { getAmazonAlexaQuestions } from "./get_amazon_alexa_questions.js";
 import { pangolinfoCapabilities } from "./pangolinfo_capabilities.js";
+import { collectEcommerceData } from "./collect_ecommerce_data.js";
 
 /**
- * 真实可用 = 20 个 tool（19 业务 + 1 自省 pangolinfo_capabilities）。
+ * 21 个工具：20 个同步业务工具 + 1 个本地自省工具。
  * pangolinfo_capabilities 放在第一位 — 这是 AI 第一次接入时建议先调的自省接口。
  * 注：scrape_url 通用逃生口于 0.6.0 新增。
  *     search_amazon_alexa (Rufus): 0.5.0 移除 → 0.6.1 加回 → 0.6.2 移除 → 0.6.3 恢复
  *     (上游 alexa API 已恢复支持;参数格式 parserName=amazonAlexa + param[] + screenshot)。
- *     pacer_search: 独立工具于 2026-06 退役 → 诉讼能力并入 wipo_search 的 enableLitigation 参数。
+ *     本次统一 MCP 排除社媒、全部 V3 及异步能力；保留旧实现供追溯。
  */
 export const tools: Tool[] = [
   pangolinfoCapabilities,
+  collectEcommerceData,
   searchAmazon,
   getAmazonProduct,
   getAmazonDeliveryTime,
@@ -53,8 +54,7 @@ export const tools: Tool[] = [
   filterCategories,
   filterNiches,
   getCategoryPaths,
-  searchLocalMaps,
-  wipoSearch,
+  calculateAmazonProfit,
   aiSearch,
   keywordTrends,
   scrapeUrl,

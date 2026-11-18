@@ -17,8 +17,8 @@ const inputSchema = z.object({
     en: "Whether to generate Rufus answers. Questions from both regions are always returned; when false, every answer is null.",
   })),
   region: z.enum(["region1", "region2", "all"]).default("all").describe(t({
-    zh: "仅在 includeAnswers=true 时控制哪些区域获取答案：region1=主图下方，region2=Product information 下方，all=两区；不会筛选返回的问题。",
-    en: "Only selects which regions receive answers when includeAnswers=true: region1 is below the main image, region2 is below Product information, and all means both. It never filters returned questions.",
+    zh: "仅在 includeAnswers=true 时控制答案区域：region1=主图下方，region2=Product information 下方，all=全部（含页面无题时的侧边面板回退）；不会筛选返回的问题。面板问题返回于 regions.panel，source=panel。",
+    en: "Only selects answer regions: region1 below the main image, region2 below Product information, all includes the side-panel fallback when inline questions are absent. Questions are never filtered. Panel suggestions appear in regions.panel with source=panel.",
   })),
   concurrency: z.number().int().min(1).max(10).default(5).describe(t({
     zh: "获取答案时的最大并发数，1–10，默认 5。",
@@ -31,8 +31,8 @@ const inputSchema = z.object({
 export const getAmazonAlexaQuestions: Tool<typeof inputSchema> = {
   name: "get_amazon_alexa_questions",
   description: t({
-    zh: "Alexa Listing API：提取指定 ASIN 登录态商品详情页中的两组 Alexa/Rufus 预设问题，并可选并发获取与该 ASIN 绑定的完整文本答案。提取到问题收 5 积分，每个成功答案区域增加 20，实际为 0/5/25/45；正常无问题或服务端失败为 0，明确无效 ASIN 收 5。",
-    en: "Alexa Listing API: extract both Alexa/Rufus preset-question regions from a logged-in Amazon PDP and optionally answer them in that ASIN context. Extracted questions cost 5 points and each answered region adds 20 (0/5/25/45 total); valid no-question and service failures cost 0, while an explicitly invalid ASIN costs 5.",
+    zh: "Alexa Listing API：提取指定 ASIN 商品页中的两组 Alexa/Rufus 预设问题；正文无题时回退到侧边面板初始推荐题（regions.panel），可选获取与该 ASIN 绑定的答案。问题收 5 积分，每个成功答案区域增加 20，面板答案按一个区域结算；实际为 0/5/25/45。无题或服务端失败为 0，明确无效 ASIN 收 5。",
+    en: "Alexa Listing API: extract both Alexa/Rufus preset-question regions from a logged-in Amazon PDP; if neither has questions, use the product panel's initial suggestions (regions.panel). Optionally answer in that ASIN context. Questions cost 5 points and each answered region adds 20 (0/5/25/45 total); panel answers count as one region. No-question and service failures cost 0; explicitly invalid ASINs cost 5.",
   }),
   inputSchema,
   async execute(input, ctx) {

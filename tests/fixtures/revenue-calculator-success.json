@@ -1,0 +1,83 @@
+{
+  "code": 0,
+  "message": "ok",
+  "data": {
+    "summary": {
+      "FBA": {
+        "fulfillmentFee": 5.62,
+        "referralFee": 7.5,
+        "referralFeeBase": 7.5,
+        "referralFeePromotion": 0.0,
+        "fixedClosingFee": 1.8,
+        "amazonFeeTotal": 9.3,
+        "storageFeePeak": 0.78,
+        "storageFeeNonPeak": 0.39,
+        "totalCost": 14.92,
+        "profit": 34.68,
+        "profitRate": 69.37,
+        "currency": "USD"
+      },
+      "MFN": {
+        "referralFee": 7.5,
+        "referralFeeBase": 7.5,
+        "referralFeePromotion": 0.0,
+        "fixedClosingFee": 1.8,
+        "amazonFeeTotal": 9.3,
+        "totalCost": 9.3,
+        "profit": 40.69,
+        "profitRate": 81.4,
+        "currency": "USD"
+      }
+    },
+    "product": {
+      "asin": "B07FZ8S74R",
+      "price": 49.99,
+      "title": "Echo Dot (3rd Gen, 2018 release) - Smart speaker with Alexa - Charcoal",
+      "imageUrl": "https://m.media-amazon.com/images/I/41CRnvYqmqL._SL120_.jpg",
+      "glProductGroupName": "gl_digital_products_3",
+      "salesRank": null,
+      "dimension": {
+        "length": 0.0,
+        "width": 0.0,
+        "height": 0.0,
+        "unit": "inches"
+      },
+      "weight": {
+        "value": 0.0,
+        "unit": "pounds"
+      }
+    },
+    "raw": {
+      "countryCode": "US",
+      "asin": "B07FZ8S74R",
+      "programFeeResultMap": {
+        "Core#0": {
+          "otherFeeInfoMap": {
+            "FulfillmentFee": {
+              "total": {
+                "amount": 5.62,
+                "currency": "USD"
+              }
+            },
+            "ReferralFee": {
+              "total": {
+                "amount": 7.5,
+                "currency": "USD"
+              }
+            }
+          }
+        },
+        "MFN#1": {
+          "otherFeeInfoMap": {
+            "ReferralFee": {
+              "total": {
+                "amount": 7.5,
+                "currency": "USD"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
