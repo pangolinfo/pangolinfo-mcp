@@ -30,6 +30,7 @@ import { z } from "zod";
 import type { Tool } from "./_types.js";
 import { PangolinfoError } from "../errors.js";
 import { t } from "../i18n.js";
+import { keywordPlatform } from "./search_amazon.js";
 
 const PARSERS = [
   "amzKeyword",
@@ -77,6 +78,7 @@ const SCRAPE_ZIPCODES = [
 ] as const;
 
 const inputSchema = z.object({
+  platform: keywordPlatform,
   parserName: z
     .enum(PARSERS)
     .describe(
@@ -158,6 +160,9 @@ Cost: ~1 point/call, ~5s.
   inputSchema,
   async execute(input, ctx) {
     const hasContent = !!input.content?.trim();
+    if (input.platform && input.parserName !== "amzKeyword") {
+      throw new PangolinfoError("BAD_INPUT", 400, "platform is only supported for amzKeyword.");
+    }
     const hasUrl = !!input.url?.trim();
     if (hasContent === hasUrl) {
       throw new PangolinfoError(
@@ -206,6 +211,7 @@ Cost: ~1 point/call, ~5s.
 
     const body: Record<string, unknown> = {
       parserName: input.parserName,
+      ...(input.platform && { platform: input.platform }),
       format: input.format,
       timeout: 60000,
     };

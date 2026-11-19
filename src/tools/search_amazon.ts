@@ -26,7 +26,13 @@ import { z } from "zod";
 import type { Tool } from "./_types.js";
 import { t } from "../i18n.js";
 
+export const keywordPlatform = z.enum(["pc", "mobile"]).optional().describe(t({
+  zh: "关键词搜索设备，默认 pc。mobile 适用于美国站，邮编固定为 10041。",
+  en: "Device for keyword search. Defaults to pc. Mobile uses US ZIP code 10041 on Amazon US.",
+}));
+
 const inputSchema = z.object({
+  platform: keywordPlatform,
   keyword: z
     .string()
     .min(1)
@@ -50,8 +56,8 @@ const inputSchema = z.object({
     .optional()
     .describe(
       t({
-        zh: "邮编，必须匹配 site 站点所在国家（amz_us → 美国邮编，amz_jp → 日本邮编 …）。可选；不传时后端会从对应国家邮编池随机挑一个。跨国邮编（如 amz_us + 日本邮编）会被后端拒绝。Examples: 10001 (NY) / 90001 (LA) / 100-0001 (Tokyo).",
-        en: "ZIP code that must match the site country (amz_us → US zip, amz_jp → JP zip, ...). Optional; backend picks a random one from the per-country pool when omitted. Cross-country zips (e.g. amz_us + JP zip) are rejected by the backend. Examples: 10001 (NY) / 90001 (LA) / 100-0001 (Tokyo).",
+        zh: "PC 搜索可选邮编，须与站点匹配。省略时从站点邮编池随机选择。示例：美国 90001、日本 100-0004。移动端固定使用 10041。",
+        en: "Optional marketplace ZIP code for PC searches, e.g. 90001 (US) or 100-0004 (Japan). When omitted, the backend picks one for the marketplace. Mobile always uses 10041.",
       }),
     ),
   format: z
@@ -120,6 +126,7 @@ Cost: ~1 point/page, ~5s. **Only paginate when the user explicitly asks for more
     return ctx.client.post("/api/v1/scrape", {
       url,
       parserName: "amzKeyword",
+      ...(input.platform && { platform: input.platform }),
       format: input.format,
       timeout: 60000,
       ...(input.zipcode ? { bizContext: { zipcode: input.zipcode } } : {}),

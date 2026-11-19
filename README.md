@@ -256,7 +256,7 @@ If you're calling the endpoint directly (not through a standard MCP client):
 | Tool | Capability | Points |
 | --- | --- | --- |
 | `pangolinfo_capabilities` | Current catalog and workflows; no backend call | Free |
-| `search_amazon` | Amazon keyword search | JSON 1/page; rawHtml/markdown 0.75/page |
+| `search_amazon` | Amazon keyword search. Optional `platform` selects `pc` (default) or `mobile` (Amazon US, fixed ZIP 10041). Also available in `scrape_url` with `parserName=amzKeyword`. | JSON 1/page; rawHtml/markdown 0.75/page |
 | `get_amazon_product` | Amazon product details | JSON 1/page; rawHtml/markdown 0.75/page |
 | `get_amazon_videos` | Amazon main-media popup, Premium A+ and Product Videos | 1 point per successful snapshot |
 | `get_amazon_delivery_time` | Product details plus delivery estimates | 2 |
