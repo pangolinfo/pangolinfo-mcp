@@ -40,6 +40,12 @@ interface ToolMeta {
 
 const TOOL_META: ToolMeta[] = [
   {
+    name: "get_amazon_videos",
+    cost: "1pt/successful snapshot",
+    domain: "amazon",
+    oneLiner: { zh: "主图弹窗、Premium A+ hero 与 Product Videos 三块独立视频清单", en: "Independent main-media popup, Premium A+ hero and Product Videos lists" },
+  },
+  {
     name: "calculate_amazon_profit",
     cost: "5pt/call",
     domain: "amazon",

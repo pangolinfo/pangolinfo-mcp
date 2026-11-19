@@ -1,6 +1,6 @@
 # Pangolinfo MCP tool map
 
-Version 0.10.0: 21 registered tools (20 business tools plus free local introspection).
+Version 0.11.0: 22 registered tools (21 business tools plus free local introspection).
 
 ## Discovery
 
@@ -11,6 +11,7 @@ Call `pangolinfo_capabilities()` first. `tools/list` provides the actual input s
 | Goal | Tool sequence |
 | --- | --- |
 | Amazon product research | search_amazon → get_amazon_product → get_amazon_reviews → calculate_amazon_profit |
+| Amazon video research | search_amazon → get_amazon_videos |
 | Category discovery | search_categories → get_category_children → get_category_paths → list_category_products |
 | Category/niche analytics | filter_categories → filter_niches → get_amazon_product |
 | Seller research | get_amazon_product → list_seller_products |
@@ -20,7 +21,7 @@ Call `pangolinfo_capabilities()` first. `tools/list` provides the actual input s
 | Competing offers | scrape_url(parserName=amzFollowSeller) |
 | Alexa research | search_amazon_alexa / get_amazon_alexa_questions |
 
-Profit calculation accepts US/JP only and costs a fixed 5 points per successful call; its response does not include pointCost. Missing pointCost does not mean free. Ecommerce Product returns details plus aggregate ratings at 0.8 points/product; Reviews costs 0.8 points/unique review. The complete 21-tool catalog is in README.md; billing follows the underlying REST contract and pointCost where returned.
+Profit calculation accepts US/JP only and costs a fixed 5 points per successful call; its response does not include pointCost. Missing pointCost does not mean free. Ecommerce Product returns details plus aggregate ratings at 0.8 points/product; Reviews costs 0.8 points/unique review. README.md lists all 22 tools.
 
 ## Boundaries
 

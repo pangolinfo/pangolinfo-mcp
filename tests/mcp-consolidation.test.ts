@@ -6,6 +6,7 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 import { PangolinfoClient } from "../src/client.js";
 import { calculateAmazonProfit } from "../src/tools/calculate_amazon_profit.js";
 import { collectEcommerceData } from "../src/tools/collect_ecommerce_data.js";
+import { getCategoryPaths } from "../src/tools/get_category_paths.js";
 import { tools } from "../src/tools/index.js";
 import { pangolinfoCapabilities } from "../src/tools/pangolinfo_capabilities.js";
 import { PangolinfoError, codeFromBizCode, hintFor } from "../src/errors.js";
@@ -142,10 +143,24 @@ test("ecommerce defaults fixed countries and rejects unsupported cross-platform 
     assert.equal(collectEcommerceData.inputSchema.safeParse({ platform: "target", productId: "123", ...patch }).success, false);
 });
 
+test("response-size multipliers are capped at the schema boundary", () => {
+  const base = { platform: "walmart", country: "US", productId: "123" } as const;
+  // native blocks are copied through verbatim and triple the payload, so the
+  // page size that multiplies them has to come down with them.
+  assert.equal(collectEcommerceData.inputSchema.safeParse({ ...base, pageSize: 100 }).success, true);
+  assert.equal(collectEcommerceData.inputSchema.safeParse({ ...base, includeNative: true, pageSize: 20 }).success, true);
+  assert.equal(collectEcommerceData.inputSchema.safeParse({ ...base, includeNative: true, pageSize: 100 }).success, false);
+
+  const ids = (n: number) => Array.from({ length: n }, (_, i) => String(1000 + i));
+  assert.equal(getCategoryPaths.inputSchema.safeParse({ categoryIds: ids(100) }).success, true);
+  assert.equal(getCategoryPaths.inputSchema.safeParse({ categoryIds: ids(101) }).success, false);
+  assert.equal(getCategoryPaths.inputSchema.safeParse({ categoryIds: ["9".repeat(65)] }).success, false);
+});
+
 test("discovery matches the registered synchronous catalog and all workflow tools exist", async () => {
   const capabilities: any = await pangolinfoCapabilities.execute({ detail: "full" }, {} as any);
   const names = tools.map(tool => tool.name);
-  assert.equal(names.length, 21);
+  assert.equal(names.length, 22);
   assert.equal(new Set(names).size, names.length);
   assert.equal(capabilities.wireTotalCount, names.length);
   assert.equal(capabilities.businessToolCount, names.length - 1);
@@ -167,7 +182,7 @@ test("built stdio tools/list and capabilities agree in both languages without ba
     try {
       await client.connect(transport);
       const listed = await client.listTools();
-      assert.equal(listed.tools.length, 21);
+      assert.equal(listed.tools.length, 22);
       const catalog = JSON.stringify(listed);
       assert.doesNotMatch(catalog, /collect_social_data|search_naver_cafe|search_local_maps|wipo_search|callbackUrl|\/api\/v3\//);
       const profit = listed.tools.find(tool => tool.name === "calculate_amazon_profit")!;

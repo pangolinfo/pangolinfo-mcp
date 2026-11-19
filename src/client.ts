@@ -137,11 +137,14 @@ export class PangolinfoClient {
       const text = await safeReadText(res);
       // Human-first message; raw HTTP status / path / body kept in details
       // for logs, not dumped into the first line the AI reads.
+      // When the body itself becomes the message, whatever wrote that body
+      // (gateway, proxy, upstream) is talking straight to the model. Flag it
+      // so the server layer fences it like any other foreign content.
       throw new PangolinfoError(
         code,
         res.status,
         text || res.statusText || `HTTP ${res.status}`,
-        { httpStatus: res.status, method, path, body: text },
+        { httpStatus: res.status, method, path, body: text, upstreamText: Boolean(text) },
       );
     }
 

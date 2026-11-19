@@ -11,7 +11,7 @@ const inputSchema = z.object({
   productUrl: z.string().url().max(2048).optional().describe(t({zh:"完整商品链接，与productId至少填写一项。",en:"Full product URL; supply this or productId."})),
   page: z.number().int().min(1).max(300001).optional().describe(t({zh:"仅Reviews分页；TikTok Shop固定首批，无需传入。",en:"Reviews page only; omit for TikTok Shop's fixed first batch."})),
   pageSize: z.number().int().min(1).max(100).optional().describe(t({zh:"仅支持可变每页数量的平台Reviews；Sam's Club和TikTok Shop无需传入。",en:"Reviews page size where supported; omit for Sam's Club and TikTok Shop."})),
-  includeNative: z.boolean().optional().describe(t({zh:"是否附带上游原生数据；默认false。",en:"Include native upstream data; defaults to false."})),
+  includeNative: z.boolean().optional().describe(t({zh:"是否附带上游原生数据；默认false。原生块会使响应体积约为3倍，开启时pageSize不得超过20。",en:"Include native upstream data; defaults to false. Native blocks make responses roughly 3x larger, so pageSize must not exceed 20 when this is on."})),
   refresh: z.boolean().optional().describe(t({zh:"请求刷新现有缓存。",en:"Request a refresh of cached data."})),
   allowStale: z.boolean().optional().describe(t({zh:"仅Reviews：是否允许使用过期缓存。",en:"Reviews only: allow stale cached data."})),
   originProductId: z.string().optional().describe(t({zh:"仅Naver Shopping：可选原商品ID映射。",en:"Naver Shopping only: optional origin-product mapping."})),
@@ -30,6 +30,11 @@ const inputSchema = z.object({
       if (input[field] !== undefined) ctx.addIssue({code:z.ZodIssueCode.custom,message:`${field} is not supported for Product`,path:[field]});
   }
   if (!input.productId && !input.productUrl) ctx.addIssue({code:z.ZodIssueCode.custom,message:"productId or productUrl is required",path:["productId"]});
+  // Native upstream blocks are copied through verbatim and multiply the
+  // payload ~3x. At pageSize=100 that lands around a quarter-megabyte of
+  // JSON in one tool result, which floods the caller's context.
+  if (input.includeNative && input.pageSize !== undefined && input.pageSize > 20)
+    ctx.addIssue({code:z.ZodIssueCode.custom,message:"pageSize must be <= 20 when includeNative is true",path:["pageSize"]});
   if (input.platform === "tiktok" && ((input.page !== undefined && input.page !== 1) || (input.pageSize !== undefined && input.pageSize !== 5)))
     ctx.addIssue({code:z.ZodIssueCode.custom,message:"TikTok uses page=1, pageSize=5 and no sort",path:["platform"]});
 });

@@ -10,6 +10,7 @@ import type { Tool } from "./_types.js";
 
 import { searchAmazon } from "./search_amazon.js";
 import { getAmazonProduct } from "./get_amazon_product.js";
+import { getAmazonVideos } from "./get_amazon_videos.js";
 import { getAmazonDeliveryTime } from "./get_amazon_delivery_time.js";
 import { getAmazonReviews } from "./get_amazon_reviews.js";
 import { listBestsellers } from "./list_bestsellers.js";
@@ -31,7 +32,7 @@ import { pangolinfoCapabilities } from "./pangolinfo_capabilities.js";
 import { collectEcommerceData } from "./collect_ecommerce_data.js";
 
 /**
- * 21 个工具：20 个同步业务工具 + 1 个本地自省工具。
+ * 22 个工具：21 个同步业务工具 + 1 个本地自省工具。
  * pangolinfo_capabilities 放在第一位 — 这是 AI 第一次接入时建议先调的自省接口。
  * 注：scrape_url 通用逃生口于 0.6.0 新增。
  *     search_amazon_alexa (Rufus): 0.5.0 移除 → 0.6.1 加回 → 0.6.2 移除 → 0.6.3 恢复
@@ -43,6 +44,7 @@ export const tools: Tool[] = [
   collectEcommerceData,
   searchAmazon,
   getAmazonProduct,
+  getAmazonVideos,
   getAmazonDeliveryTime,
   getAmazonReviews,
   listBestsellers,

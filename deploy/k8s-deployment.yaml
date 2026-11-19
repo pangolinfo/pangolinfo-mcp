@@ -3,7 +3,7 @@
 # 部署到阿里云 ACK (crawler 集群, ap-southeast-1, default namespace)
 # 使用方式: ACK 控制台 -> 工作负载 -> 无状态 -> 「使用 YAML 创建」 -> 整段贴入
 #
-# 镜像: registry-intl.ap-southeast-1.aliyuncs.com/pangolinfo-prod/pangolinfo-mcp:0.10.0
+# 镜像: registry-intl.ap-southeast-1.aliyuncs.com/pangolinfo-prod/pangolinfo-mcp:0.11.0
 # 端口: 3000 (HTTP, /mcp 协议端点 + /health 探针)
 # 多租户: API key 通过每次请求的 ?api_key= 或 Authorization 头传入,不存集群侧
 apiVersion: apps/v1
@@ -32,7 +32,7 @@ spec:
     spec:
       containers:
         - name: mcp-server
-          image: registry-intl.ap-southeast-1.aliyuncs.com/pangolinfo-prod/pangolinfo-mcp:0.10.0
+          image: registry-intl.ap-southeast-1.aliyuncs.com/pangolinfo-prod/pangolinfo-mcp:0.11.0
           imagePullPolicy: Always
           ports:
             - name: http

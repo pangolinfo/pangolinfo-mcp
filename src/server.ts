@@ -42,6 +42,8 @@ import { loadAuth } from "./auth.js";
 import { PangolinfoClient } from "./client.js";
 import { CONFIG } from "./config.js";
 import { PangolinfoError, hintFor } from "./errors.js";
+import { finalizeResult } from "./funnel.js";
+import { fenceUntrusted } from "./untrusted.js";
 import { tools } from "./tools/index.js";
 import type { Tool, ToolContext, ToolLogger } from "./tools/_types.js";
 import { SERVER_VERSION } from "./version.js";
@@ -213,6 +215,14 @@ function buildServer(ctx: ToolContext): Server {
         client: ctx.client.withClientSource(clientSource),
       };
       const result = await tool.execute(parsed, callCtx);
+      // `format: "markdown"` returns the rendered page inside the usual
+      // JSON envelope, so it is page content, not records — cap and fence
+      // it. Reads the validated input, never a caller-supplied hint.
+      const pageText = (parsed as { format?: unknown }).format === "markdown";
+      // Finalise BEFORE logging: fencing/capping can still fail, and an
+      // "OK" line followed by an error line for the same reqId makes the
+      // call log lie about what the caller actually received.
+      const final = finalizeResult(result, { pageText });
       logCall({
         reqId,
         keyTag,
@@ -223,13 +233,8 @@ function buildServer(ctx: ToolContext): Server {
       });
       return {
         content: [
-          {
-            type: "text" as const,
-            text:
-              typeof result === "string"
-                ? result
-                : JSON.stringify(result, null, 2),
-          },
+          { type: "text" as const, text: final.text },
+          ...(final.warning ? [{ type: "text" as const, text: final.warning }] : []),
         ],
       };
     } catch (err) {
@@ -367,12 +372,18 @@ function toErrorEnvelope(err: unknown, toolName: string, reqId?: string) {
     // + user action. Line 3: an explicit retriable flag so the AI doesn't have
     // to infer whether to retry.
     const retry = err.retriable ? "retriable=yes" : "retriable=no";
+    // A failure can carry a foreign body verbatim (a gateway/proxy error
+    // page, for instance). Same fence as a successful page fetch — a
+    // fenced payload on success and an open channel on failure would
+    // leave the injection surface half closed.
+    const upstream = (err.details as { upstreamText?: boolean } | undefined)?.upstreamText === true;
+    const message = upstream ? fenceUntrusted(err.message) : err.message;
     return {
       isError: true,
       content: [
         {
           type: "text" as const,
-          text: `[${err.code}] ${err.message}\n${hintFor(err.code)}\n(${retry})${ref}`,
+          text: `[${err.code}] ${message}\n${hintFor(err.code)}\n(${retry})${ref}`,
         },
       ],
     };

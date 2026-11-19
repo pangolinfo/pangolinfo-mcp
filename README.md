@@ -2,11 +2,17 @@
 
 One MCP service for synchronous Amazon research, ecommerce Product and Reviews, AI search, keyword trends and profit calculations.
 
-- **Version:** 0.10.0
-- **Tools:** 21 total: 20 business tools and free local `pangolinfo_capabilities`.
+- **Version:** 0.11.0
+- **Tools:** 22 total, including 21 business tools and free local `pangolinfo_capabilities`.
 - **Hosted endpoint:** `https://mcp.pangolinfo.com/mcp` (Streamable HTTP).
 - **Authentication:** your Pangolinfo API key; existing endpoint and client configuration remain valid.
 - **Scope:** seven ecommerce platforms, existing Amazon/category/niche tools and V1/V2 synchronous APIs. Social media, all V3 APIs and asynchronous jobs/callbacks/polling are excluded.
+
+## Upgrade from 0.10.x
+
+Page bodies are now **fenced**: when a tool returns a whole page — either the non-JSON response path or a `format: "markdown"` call, whose page text arrives inside the usual JSON envelope — the text is prefixed with a security notice and bracketed by `=====UNTRUSTED_<id>_BEGIN/END=====` markers carrying the id of that response, and the body is cut at 60,000 characters with a note saying where it stopped (in the markdown case each string leaf of 1,000+ characters is treated as page text — cut and fenced — while the envelope's metadata is untouched and stays valid JSON). Structured (billed) results are **never** truncated — above ~200,000 characters they are returned in full with a warning telling the model not to re-request.
+
+Structured results are valid JSON in the first MCP content block. Large results include a second text block with the size notice. `collect_ecommerce_data` accepts a maximum explicit `pageSize` of 20 with `includeNative`, and `get_category_paths` accepts up to 100 IDs per call.
 
 ## Upgrade from 0.9.x
 
@@ -252,6 +258,7 @@ If you're calling the endpoint directly (not through a standard MCP client):
 | `pangolinfo_capabilities` | Current catalog and workflows; no backend call | Free |
 | `search_amazon` | Amazon keyword search | JSON 1/page; rawHtml/markdown 0.75/page |
 | `get_amazon_product` | Amazon product details | JSON 1/page; rawHtml/markdown 0.75/page |
+| `get_amazon_videos` | Amazon main-media popup, Premium A+ and Product Videos | 1 point per successful snapshot |
 | `get_amazon_delivery_time` | Product details plus delivery estimates | 2 |
 | `get_amazon_reviews` | Amazon buyer reviews | 5/page |
 | `list_bestsellers` | Best sellers | JSON 1/page; rawHtml/markdown 0.75/page |
@@ -305,7 +312,7 @@ US `search_amazon_alexa` queries optionally accept `asin` or a product `url`; bo
 
 For product subtitles/highlights, read `get_amazon_product` JSON at `data.json[0].data.results[0].itemHighlights`. The parser normalizes the dedicated subtitle, the main-title suffix, or an already parsed `Item Highlight(s)` attribute into this string; it is empty when unavailable. Markdown conversion is not required.
 
-> **Plus a free local call:** `pangolinfo_capabilities` returns the full tool catalog, canonical workflows, and usage tips with no backend round-trip (**0** credits). It is a self-introspection helper, one of the 21 registered tools, alongside 20 business tools.
+> **Plus a free local call:** `pangolinfo_capabilities` returns the full tool catalog, canonical workflows, and usage tips with no backend round-trip (**0** credits). It is a self-introspection helper, one of the 22 registered tools, alongside 21 business tools.
 
 Default marketplace is **Amazon US** (`marketplaceId=ATVPDKIKX0DER`, `zip=90001`). Override per call via tool arguments.
 
@@ -377,7 +384,7 @@ After restarting your AI client, ask it:
 
 > List all available `pangolinfo` MCP tools.
 
-You should see 21 tools (20 business tools plus free introspection). Then try:
+You should see 22 tools (21 business tools plus free introspection). Then try:
 
 > Use `pangolinfo_capabilities` with mode "summary".
 
@@ -411,7 +418,7 @@ src/
 ├── i18n.ts             zh/en translation lookup
 └── tools/
     ├── _types.ts             Tool / ToolContext type definitions
-    ├── index.ts              Tool registry (21 total: 20 business + capabilities)
+    ├── index.ts              Tool registry (22 total, including capabilities)
     └── <verb_noun>.ts        One file per tool
 ```
 
@@ -433,6 +440,8 @@ We take operator and user safety seriously. By design, this MCP server:
 - **No telemetry.** This server does not phone home, does not collect usage analytics, and does not log your prompts. The only outbound traffic is the Amazon / ecommerce / search data API calls you explicitly invoke through tools.
 - **No PII collection.** No user account info, no email, no IP geolocation, and no prompt content is persisted by this server. Tool calls forward only the parameters you (or the AI agent) supplied.
 - **Read-only.** Every tool is a strictly read-only data lookup. None of them can write to Amazon, place orders, post reviews, modify listings, or take any side-effecting action on third-party platforms.
+- **Scraped text is fenced, not trusted.** Anything a third party wrote — a page body, a gateway error page — is wrapped in a `SECURITY NOTICE` plus `=====UNTRUSTED_<id>_BEGIN/END=====` markers carrying a random per-response id, so the model can tell our instructions from a page's text. Marker-like strings inside the payload are defanged, and any forged closing marker can never match the response's own id.
+- **Oversized results never silently lose data.** Page bodies are cut at 60,000 characters and the cut is annotated. Billed results (reviews, product lists) are returned in full at any size — they are charged per record and not stored server-side, so dropping them would destroy paid data.
 - **HTTPS-only transport.** Both the stdio variant (local) and the hosted variant (`https://mcp.pangolinfo.com/mcp`) require HTTPS; HTTP requests are refused.
 - **Open source.** The full source is in this repository under MIT license — anyone can audit what the server sends and where.
 - **Responsible use.** Pangolinfo APIs aggregate public e-commerce data. You are responsible for using the returned data in compliance with the terms of service of the underlying platforms (Amazon, Google, etc.) and with applicable laws in your jurisdiction.
