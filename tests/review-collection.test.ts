@@ -37,6 +37,27 @@ test("unsupported routes and TikTok pagination are rejected",()=>{
   assert.equal(searchNaverCafe.inputSchema.safeParse({keyword:"로보락",commentPage:21}).success,false);
 });
 
+test("pageSize outside the per-storefront limit is rejected locally",()=>{
+  for (const input of [
+    {platform:"walmart",country:"US",productId:"123",pageSize:20},
+    {platform:"samsclub",productId:"123",pageSize:20},
+    {platform:"target",productId:"123",pageSize:51},
+    {platform:"naver",productId:"123",pageSize:31},
+    {platform:"bestbuy",country:"US",productId:"123",pageSize:21},
+  ] as const) assert.equal(collectEcommerceData.inputSchema.safeParse(input).success,false,JSON.stringify(input));
+  for (const input of [
+    {platform:"walmart",country:"CA",productId:"123",pageSize:100},
+    {platform:"walmart",country:"US",productId:"123",pageSize:10},
+    {platform:"samsclub",productId:"123",pageSize:10},
+    {platform:"target",productId:"123",pageSize:50},
+    {platform:"naver",productId:"123",pageSize:30},
+    {platform:"bestbuy",country:"CA",productId:"123",pageSize:100},
+    {platform:"bestbuy",country:"US",productId:"123",pageSize:20},
+    {platform:"costco",country:"US",productId:"123",pageSize:100},
+    {platform:"tiktok",productId:"123",page:1,pageSize:5},
+  ] as const) assert.equal(collectEcommerceData.inputSchema.safeParse(input).success,true,JSON.stringify(input));
+});
+
 test("Product supports seven platforms and rejects review-only or fixed parameters", async () => {
   const calls: any[] = [];
   const ctx: any = {client:{post:async (...args:any[])=>{ calls.push(args); return {code:0,pointCost:0.8}; }},logger:{info(){}}};

@@ -144,7 +144,9 @@ test("ecommerce defaults fixed countries and rejects unsupported cross-platform 
 });
 
 test("response-size multipliers are capped at the schema boundary", () => {
-  const base = { platform: "walmart", country: "US", productId: "123" } as const;
+  // Walmart US is fixed at 10 per page and can't exercise the 100-page-size
+  // boundary, so the multiplier test runs on the CA storefront (1–100).
+  const base = { platform: "walmart", country: "CA", productId: "123" } as const;
   // native blocks are copied through verbatim and triple the payload, so the
   // page size that multiplies them has to come down with them.
   assert.equal(collectEcommerceData.inputSchema.safeParse({ ...base, pageSize: 100 }).success, true);

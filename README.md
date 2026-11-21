@@ -2,7 +2,7 @@
 
 One MCP service for synchronous Amazon research, ecommerce Product and Reviews, AI search, keyword trends and profit calculations.
 
-- **Version:** 0.11.0
+- **Version:** 0.12.0
 - **Tools:** 22 total, including 21 business tools and free local `pangolinfo_capabilities`.
 - **Hosted endpoint:** `https://mcp.pangolinfo.com/mcp` (Streamable HTTP).
 - **Authentication:** your Pangolinfo API key; existing endpoint and client configuration remain valid.
