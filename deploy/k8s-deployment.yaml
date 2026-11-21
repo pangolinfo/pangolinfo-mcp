@@ -32,7 +32,7 @@ spec:
     spec:
       containers:
         - name: mcp-server
-          image: registry-intl.ap-southeast-1.aliyuncs.com/pangolinfo-prod/pangolinfo-mcp:0.11.0
+          image: registry-intl.ap-southeast-1.aliyuncs.com/pangolinfo-prod/pangolinfo-mcp:0.12.0
           imagePullPolicy: Always
           ports:
             - name: http
