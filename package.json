@@ -1,6 +1,6 @@
 {
   "name": "pangolinfo-mcp",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "description": "Pangolinfo MCP: 21 synchronous data tools plus local introspection for Amazon, ecommerce Product and Reviews, AI search, trends and profit calculations.",
   "type": "module",
   "license": "MIT",

@@ -287,8 +287,8 @@ const TIPS = [
     en: "Profit calculations cost 5 points; Amazon reviews cost 5 points/page. Start with one review page before scaling. Ecommerce Product costs 0.8 points/product and Reviews cost 0.8 points/unique review.",
   },
   {
-    zh: "格式选择：search_amazon / get_amazon_product 默认 format='json' 取结构化字段；只在用户明确要原始页时切 'markdown'。",
-    en: "Format choice: search_amazon / get_amazon_product default to format='json' for structured fields. Only switch to 'markdown' when the user wants the raw page.",
+    zh: "Amazon 采集工具统一返回结构化 JSON，按对应接口的 JSON 费率计费。",
+    en: "Amazon scraping tools always return structured JSON and are billed at the corresponding JSON rate.",
   },
   {
     zh: "类目路径：用户给关键词 → search_categories；用户给 ID → 直接喂下游或用 get_category_paths 换面包屑；想下钻 → get_category_children。",

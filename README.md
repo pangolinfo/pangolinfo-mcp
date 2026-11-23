@@ -2,7 +2,7 @@
 
 One MCP service for synchronous Amazon research, ecommerce Product and Reviews, AI search, keyword trends and profit calculations.
 
-- **Version:** 0.12.0
+- **Version:** 0.13.0
 - **Tools:** 22 total, including 21 business tools and free local `pangolinfo_capabilities`.
 - **Hosted endpoint:** `https://mcp.pangolinfo.com/mcp` (Streamable HTTP).
 - **Authentication:** your Pangolinfo API key; existing endpoint and client configuration remain valid.
@@ -10,7 +10,7 @@ One MCP service for synchronous Amazon research, ecommerce Product and Reviews, 
 
 ## Upgrade from 0.10.x
 
-Page bodies are now **fenced**: when a tool returns a whole page — either the non-JSON response path or a `format: "markdown"` call, whose page text arrives inside the usual JSON envelope — the text is prefixed with a security notice and bracketed by `=====UNTRUSTED_<id>_BEGIN/END=====` markers carrying the id of that response, and the body is cut at 60,000 characters with a note saying where it stopped (in the markdown case each string leaf of 1,000+ characters is treated as page text — cut and fenced — while the envelope's metadata is untouched and stays valid JSON). Structured (billed) results are **never** truncated — above ~200,000 characters they are returned in full with a warning telling the model not to re-request.
+Page bodies are now **fenced**: when a tool returns a whole page — either the non-JSON response path or page text that arrives inside the usual JSON envelope — the text is prefixed with a security notice and bracketed by `=====UNTRUSTED_<id>_BEGIN/END=====` markers carrying the id of that response, and the body is cut at 60,000 characters with a note saying where it stopped (each string leaf of 1,000+ characters is treated as page text — cut and fenced — while the envelope's metadata is untouched and stays valid JSON). Structured (billed) results are **never** truncated — above ~200,000 characters they are returned in full with a warning telling the model not to re-request.
 
 Structured results are valid JSON in the first MCP content block. Large results include a second text block with the size notice. `collect_ecommerce_data` accepts a maximum explicit `pageSize` of 20 with `includeNative`, and `get_category_paths` accepts up to 100 IDs per call.
 
@@ -76,7 +76,7 @@ Then wire it into your AI client — see the per-client snippets below. Point `a
 
 1. Sign up at <https://tool.pangolinfo.com/#/en/system/loading?sourceTag=github_amz>
 2. Copy your `pgl_xxxxxxxx` key from the dashboard
-3. Top up credits if needed (charges depend on the data tool and format; `pangolinfo_capabilities` is free)
+3. Top up credits if needed (charges depend on the data tool; `pangolinfo_capabilities` is free)
 
 ---
 
@@ -256,15 +256,15 @@ If you're calling the endpoint directly (not through a standard MCP client):
 | Tool | Capability | Points |
 | --- | --- | --- |
 | `pangolinfo_capabilities` | Current catalog and workflows; no backend call | Free |
-| `search_amazon` | Amazon keyword search. Optional `platform` selects `pc` (default) or `mobile` (Amazon US, fixed ZIP 10041). Also available in `scrape_url` with `parserName=amzKeyword`. | JSON 1/page; rawHtml/markdown 0.75/page |
-| `get_amazon_product` | Amazon product details | JSON 1/page; rawHtml/markdown 0.75/page |
+| `search_amazon` | Amazon keyword search. Optional `platform` selects `pc` (default) or `mobile` (Amazon US, fixed ZIP 10041). Also available in `scrape_url` with `parserName=amzKeyword`. | 1/page |
+| `get_amazon_product` | Amazon product details | 1/page |
 | `get_amazon_videos` | Amazon main-media popup, Premium A+ and Product Videos | 1 point per successful snapshot |
 | `get_amazon_delivery_time` | Product details plus delivery estimates | 2 |
 | `get_amazon_reviews` | Amazon buyer reviews | 5/page |
-| `list_bestsellers` | Best sellers | JSON 1/page; rawHtml/markdown 0.75/page |
-| `list_new_releases` | New releases | JSON 1/page; rawHtml/markdown 0.75/page |
-| `list_seller_products` | Seller listings | JSON 1/page; rawHtml/markdown 0.75/page |
-| `list_category_products` | Category listings | JSON 1/page; rawHtml/markdown 0.75/page |
+| `list_bestsellers` | Best sellers | 1/page |
+| `list_new_releases` | New releases | 1/page |
+| `list_seller_products` | Seller listings | 1/page |
+| `list_category_products` | Category listings | 1/page |
 | `search_categories` | Category keyword search | 2/call |
 | `get_category_children` | Category children | 2/call |
 | `filter_categories` | Category analytics | 5/call |
@@ -310,7 +310,7 @@ When the product-detail check explicitly confirms that the requested ASIN is mis
 
 US `search_amazon_alexa` queries optionally accept `asin` or a product `url`; both must identify the same product when supplied together. The response includes `asin` and `context_source: "product_page"` only after the real Amazon PDP request context is verified. The product panel is used without requiring inline preset-question buttons. `get_amazon_alexa_questions` falls back to initial side-panel suggestions when both inline regions are empty; these appear in `regions.panel` with `source: "panel"`. With `region: "all"`, panel answers count as one answer region (25 credits including discovery); no available suggestions costs zero.
 
-For product subtitles/highlights, read `get_amazon_product` JSON at `data.json[0].data.results[0].itemHighlights`. The parser normalizes the dedicated subtitle, the main-title suffix, or an already parsed `Item Highlight(s)` attribute into this string; it is empty when unavailable. Markdown conversion is not required.
+For product subtitles/highlights, read `get_amazon_product` JSON at `data.json[0].data.results[0].itemHighlights`. The parser normalizes the dedicated subtitle, the main-title suffix, or an already parsed `Item Highlight(s)` attribute into this string; it is empty when unavailable.
 
 > **Plus a free local call:** `pangolinfo_capabilities` returns the full tool catalog, canonical workflows, and usage tips with no backend round-trip (**0** credits). It is a self-introspection helper, one of the 22 registered tools, alongside 21 business tools.
 
@@ -392,7 +392,7 @@ This is a free local call — if it returns the tool catalog, your install is wi
 
 > Search Amazon for "wireless mouse" and return the top 5 results.
 
-Expected: ~0.75 credits deducted, ~300 KB of structured product data returned.
+Expected: ~1 credit deducted, ~300 KB of structured product data returned.
 
 ---
 
@@ -463,4 +463,4 @@ Report security issues privately to <security@pangolinfo.com> — please do not 
 [MIT](./LICENSE) © Pangolinfo
 
 
-For synchronous product details (`POST /api/v1/scrape`, `parserName=amzProductDetail`), an explicit confirmation that the ASIN is missing on the requested marketplace returns `9204` with the message `ASIN not found on this marketplace: B08HSS37H7` (the requested ASIN). Normal format-specific pricing applies; see `pointCost` (usually 1 credit for JSON). Do not automatically retry the same marketplace and ASIN; check the marketplace and identifier. The ASIN may exist on another marketplace. Network failures or no content remain `9200` without a charge. This describes the synchronous product-detail endpoint. `get_amazon_product` and `scrape_url` surface this as `[ASIN_UNAVAILABLE]`, `retriable=no`.
+For synchronous product details (`POST /api/v1/scrape`, `parserName=amzProductDetail`), an explicit confirmation that the ASIN is missing on the requested marketplace returns `9204` with the message `ASIN not found on this marketplace: B08HSS37H7` (the requested ASIN). Normal pricing applies; see `pointCost` (1 credit for JSON). Do not automatically retry the same marketplace and ASIN; check the marketplace and identifier. The ASIN may exist on another marketplace. Network failures or no content remain `9200` without a charge. This describes the synchronous product-detail endpoint. `get_amazon_product` and `scrape_url` surface this as `[ASIN_UNAVAILABLE]`, `retriable=no`.

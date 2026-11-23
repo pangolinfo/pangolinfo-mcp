@@ -14,6 +14,27 @@ import { setLocale } from "../src/i18n.js";
 
 const logger = { info() {}, error() {} };
 
+test("Amazon scraper tools expose no format option", () => {
+  const names = [
+    "search_amazon",
+    "get_amazon_product",
+    "scrape_url",
+    "list_bestsellers",
+    "list_new_releases",
+    "list_seller_products",
+    "list_category_products",
+  ];
+  for (const name of names) {
+    const tool = tools.find(candidate => candidate.name === name);
+    assert.ok(tool, `${name} must be registered`);
+    assert.equal(
+      Object.prototype.hasOwnProperty.call((tool!.inputSchema as unknown as { shape: object }).shape, "format"),
+      false,
+      `${name} must not expose format`,
+    );
+  }
+});
+
 test("profit calculation preserves the REST envelope without inventing pointCost", async () => {
   const calls: { url: string; body: unknown; headers: Record<string, string> }[] = [];
   // RevenueCalculatorController wraps only data in ApiResponse.success;

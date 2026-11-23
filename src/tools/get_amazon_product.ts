@@ -5,17 +5,15 @@
  * via POST /api/v1/scrape.
  *
  * Backend dispatch (verified 2026-05-19 against scrapeapi prod):
- *   - `format` selects the output shape (`json` | `markdown` | `rawHtml`).
- *   - For `format=json` the backend routes the raw HTML through a gRPC
- *     parser keyed by `parserName`. For PDP pages that parser is
- *     `amzProductDetail` — returns a structured `{results:[{title, seller,
- *     rating, ratingDistribution, galleryThumbnails, aiReviewsSummary, ...}]}`
- *     payload (pointCost=1.0).
- *   - For `format=markdown` / `rawHtml` the backend skips parsing and
- *     emits the body straight (pointCost=0.75); `parserName` is ignored.
+ *   - `format=json` routes the raw HTML through a gRPC parser keyed by
+ *     `parserName`. For PDP pages that parser is `amzProductDetail` —
+ *     returns a structured `{results:[{title, seller, rating,
+ *     ratingDistribution, galleryThumbnails, aiReviewsSummary, ...}]}`
+ *     payload.
  *
  *   So `format=json` ALONE returns empty (`data.json: []`) because no
  *   parser is wired in — we must always pair it with `parserName`.
+ *   The MCP always requests `format=json`.
  */
 
 import { z } from "zod";
@@ -68,15 +66,6 @@ const inputSchema = z.object({
         en: "ZIP code that must match the site country (amz_us → US zip, amz_jp → JP zip, ...). Optional; backend picks a random one from the per-country pool when omitted. Cross-country zips (e.g. amz_us + JP zip) are rejected by the backend. Examples: 10001 (NY) / 90001 (LA) / 100-0001 (Tokyo).",
       }),
     ),
-  format: z
-    .enum(["json", "markdown"])
-    .default("json")
-    .describe(
-      t({
-        zh: "返回格式。默认 'json'——结构化字段（title/price/rating/reviews/seller 等），适合程序处理。需要原始页面阅读时切 'markdown'。",
-        en: "Response format. Defaults to 'json' — a structured payload (title, price, rating, reviews, seller, etc.) ready for programmatic use. Use 'markdown' if you want the rendered PDP text instead.",
-      }),
-    ),
 });
 
 const SITE_TO_DOMAIN: Record<string, string> = {
@@ -101,19 +90,19 @@ export const getAmazonProduct: Tool<typeof inputSchema> = {
     zh: `[Amazon 单品详情] 按 ASIN 抓某个具体商品的完整 PDP 数据。
 Use when: 用户给了具体 ASIN（B0XXXXXXXX）要"看一下这个产品""查它的价格/评分/卖家""分析这个竞品"；或 SOP 中拿到候选 ASIN 后需要深拆。
 Don't use: 一次想看多个商品的简要对比（用 search_amazon 或 list_* 系列拿列表）；只要评论（用 get_amazon_reviews 更专一便宜）。
-Returns (format='json', 默认): data.json[0].data.results[0] = { asin, title, itemName, itemHighlights, price, star, rating, brand, seller{name,id,link,hasLink}, parentAsin, videos[{type,section,mp4,m3u8,previewMp4,cover,title,duration,author}], shippingFee（买家配送料数字，如 "750"；免运费/无信息为 "0"，随 zipcode 对应地址变化）, delivery{deliveryTime,fastestDelivery}, ratingDistribution[], aiReviewsSummary, bestSellersRankItems, reviews[{date,star,content,helpful,...}], productOverview[], features[], productDescription[], images[], variantDetails[], attributes[], category_id, breadCrumbs, ... } — 30+ 字段（含 variantDetails 简表）。videos[].section：product=主图画廊、brand=品牌模块、related=相关视频、customerReview=买家评论视频。需要高退货提示、免运费/付费/最快配送细分和备货时长时，改用 get_amazon_delivery_time。
+Returns: data.json[0].data.results[0] = { asin, title, itemName, itemHighlights, price, star, rating, brand, seller{name,id,link,hasLink}, parentAsin, videos[{type,section,mp4,m3u8,previewMp4,cover,title,duration,author}], shippingFee（买家配送料数字，如 "750"；免运费/无信息为 "0"，随 zipcode 对应地址变化）, delivery{deliveryTime,fastestDelivery}, ratingDistribution[], aiReviewsSummary, bestSellersRankItems, reviews[{date,star,content,helpful,...}], productOverview[], features[], productDescription[], images[], variantDetails[], attributes[], category_id, breadCrumbs, ... } — 30+ 字段（含 variantDetails 简表）。videos[].section：product=主图画廊、brand=品牌模块、related=相关视频、customerReview=买家评论视频。需要高退货提示、免运费/付费/最快配送细分和备货时长时，改用 get_amazon_delivery_time。
 类目字段：category_id 是末级面包屑的 Browse Node ID，category_name 取同一级名称；该级无有效 ID 或页面无面包屑时 ID 为空字符串，不以父类目或 Amazon 内部 categoryId 替代。
-不存在的 ASIN：当前站点明确未找到时返回 9204，message 含请求 ASIN，按格式正常计费；不自动重试。
-标题字段说明：title 保留现有主标题；itemName 为商品名称；itemHighlights 是固定的副标题/亮点字段，优先取页面独立副标题，其次取主标题分隔符后段，最后从已解析的 Item Highlight / Item Highlights 属性回填。无可识别内容时返回空字符串，不按字符数截断。读取亮点请使用 JSON 的 data.json[0].data.results[0].itemHighlights，无需转 Markdown。
+不存在的 ASIN：当前站点明确未找到时返回 9204，message 含请求 ASIN，正常计费；不自动重试。
+标题字段说明：title 保留现有主标题；itemName 为商品名称；itemHighlights 是固定的副标题/亮点字段，优先取页面独立副标题，其次取主标题分隔符后段，最后从已解析的 Item Highlight / Item Highlights 属性回填。无可识别内容时返回空字符串，不按字符数截断。读取亮点请使用 JSON 的 data.json[0].data.results[0].itemHighlights。
 Pair with: ↑ asin 常来自 search_amazon / list_bestsellers / filter_niches；↓ 同一 asin 喂 get_amazon_reviews 取更多评论（默认 PDP 只带 5-10 条 reviews）。
 Cost: ~1 积点/次, ~5s。`,
     en: `[Amazon single-product detail] Scrape the full PDP for one ASIN.
 Use when: user supplies a specific ASIN ("look at B0XXXXXXXX" / "check this product's price/rating/seller" / "analyse this competitor"); or as a SOP step after candidate ASINs are picked.
 Don't use: for many products at once (use search_amazon or list_* series for lists); for reviews only (use get_amazon_reviews — cheaper and more focused).
-Returns (format='json', default): data.json[0].data.results[0] = { asin, title, itemName, itemHighlights, price, star, rating, brand, seller{name,id,link,hasLink}, parentAsin, videos[{type,section,mp4,m3u8,previewMp4,cover,title,duration,author}], shippingFee (buyer shipping fee as a number, e.g. "750"; "0" when free shipping or no info, varies by the zipcode address), delivery{deliveryTime,fastestDelivery}, ratingDistribution[], aiReviewsSummary, bestSellersRankItems, reviews[{date,star,content,helpful,...}], productOverview[], features[], productDescription[], images[], variantDetails[], attributes[], category_id, breadCrumbs, ... } — 30+ fields (variantDetails summary included). videos[].section: product=main media gallery, brand=brand module, related=related videos, customerReview=customer review videos. Use get_amazon_delivery_time when you need the high-return warning, free/paid/fastest delivery breakdown, or handling lead time.
+Returns: data.json[0].data.results[0] = { asin, title, itemName, itemHighlights, price, star, rating, brand, seller{name,id,link,hasLink}, parentAsin, videos[{type,section,mp4,m3u8,previewMp4,cover,title,duration,author}], shippingFee (buyer shipping fee as a number, e.g. "750"; "0" when free shipping or no info, varies by the zipcode address), delivery{deliveryTime,fastestDelivery}, ratingDistribution[], aiReviewsSummary, bestSellersRankItems, reviews[{date,star,content,helpful,...}], productOverview[], features[], productDescription[], images[], variantDetails[], attributes[], category_id, breadCrumbs, ... } — 30+ fields (variantDetails summary included). videos[].section: product=main media gallery, brand=brand module, related=related videos, customerReview=customer review videos. Use get_amazon_delivery_time when you need the high-return warning, free/paid/fastest delivery breakdown, or handling lead time.
 Category fields: category_id is the Browse Node ID of the final breadcrumb; category_name uses that same breadcrumb. The ID is an empty string if the final breadcrumb has no valid ID or breadcrumbs are absent; parent IDs and Amazon internal categoryId codes are not substituted.
-Missing ASIN: confirmed absence on the requested marketplace returns 9204 with the ASIN in message; normal format-specific billing applies. Do not auto-retry.
-Title fields: title preserves the existing main title; itemName is the product name; itemHighlights is the stable subtitle/highlights field. Prefers the dedicated subtitle, then the main-title suffix, then an already parsed Item Highlight / Item Highlights attribute. Empty string when no recognized content is available; no character-limit truncation. Read data.json[0].data.results[0].itemHighlights in JSON; no Markdown conversion is needed.
+Missing ASIN: confirmed absence on the requested marketplace returns 9204 with the ASIN in message; normal billing applies. Do not auto-retry.
+Title fields: title preserves the existing main title; itemName is the product name; itemHighlights is the stable subtitle/highlights field. Prefers the dedicated subtitle, then the main-title suffix, then an already parsed Item Highlight / Item Highlights attribute. Empty string when no recognized content is available; no character-limit truncation. Read data.json[0].data.results[0].itemHighlights in JSON.
 Pair with: ↑ asin typically comes from search_amazon / list_bestsellers / filter_niches; ↓ feed the same asin into get_amazon_reviews for more reviews (the PDP carries only ~5-10).
 Cost: ~1 point/call, ~5s.`,
   }),
@@ -128,15 +117,14 @@ Cost: ~1 point/call, ~5s.`,
     const domain = SITE_TO_DOMAIN[input.site];
     const url = `https://${domain}/dp/${asin}`;
     ctx.logger.info(
-      `get_amazon_product: asin=${asin} site=${input.site} format=${input.format} url=${url}`,
+      `get_amazon_product: asin=${asin} site=${input.site} url=${url}`,
     );
-    // `parserName` is only honored by the backend when `format=json`;
-    // sending it for markdown is harmless but unnecessary. Always pair
-    // them so json never returns empty.
+    // parserName is honored only when format=json; always pair them so
+    // the response is never empty.
     return ctx.client.post("/api/v1/scrape", {
       url,
       parserName: "amzProductDetail",
-      format: input.format,
+      format: "json",
       timeout: 60000,
       ...(input.zipcode ? { bizContext: { zipcode: input.zipcode } } : {}),
     });

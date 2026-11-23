@@ -44,15 +44,6 @@ const inputSchema = z.object({
         en: "ZIP code that must match the site country (amz_us → US zip, amz_jp → JP zip, ...). Optional; backend picks a random one from the per-country pool when omitted. Cross-country zips (e.g. amz_us + JP zip) are rejected by the backend. Examples: 10001 (NY) / 90001 (LA) / 100-0001 (Tokyo).",
       }),
     ),
-  format: z
-    .enum(["json", "markdown"])
-    .default("json")
-    .describe(
-      t({
-        zh: "返回格式。默认 'json'——结构化新品榜单。需要原始页面阅读时切 'markdown'。",
-        en: "Response format. Defaults to 'json' — structured ranking list. Use 'markdown' for the rendered page text.",
-      }),
-    ),
 });
 
 export const listNewReleases: Tool<typeof inputSchema> = {
@@ -74,13 +65,13 @@ Cost: ~1 point/call, ~5s.`,
   inputSchema,
   async execute(input, ctx) {
     ctx.logger.info(
-      `list_new_releases: slug=${input.categorySlug} site=${input.site} format=${input.format}`,
+      `list_new_releases: slug=${input.categorySlug} site=${input.site}`,
     );
     return ctx.client.post("/api/v1/scrape", {
       site: input.site,
       content: input.categorySlug,
       parserName: "amzNewReleases",
-      format: input.format,
+      format: "json",
       timeout: 60000,
       ...(input.zipcode ? { bizContext: { zipcode: input.zipcode } } : {}),
     });

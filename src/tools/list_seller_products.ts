@@ -49,15 +49,6 @@ const inputSchema = z.object({
         en: "ZIP code that must match the site country (amz_us → US zip, amz_jp → JP zip, ...). Optional; backend picks a random one from the per-country pool when omitted. Cross-country zips (e.g. amz_us + JP zip) are rejected by the backend. Examples: 10001 (NY) / 90001 (LA) / 100-0001 (Tokyo).",
       }),
     ),
-  format: z
-    .enum(["json", "markdown"])
-    .default("json")
-    .describe(
-      t({
-        zh: "返回格式。默认 'json'——结构化卖家商品列表。需要原始页面阅读时切 'markdown'。",
-        en: "Response format. Defaults to 'json' — structured seller listings. Use 'markdown' for the rendered page text.",
-      }),
-    ),
   page: z
     .number()
     .int()
@@ -121,13 +112,13 @@ Tips: use pageCount to grab the full multi-page SKU set in one shot (max 3 pages
         ? `${input.sellerId}?page=${input.page}`
         : input.sellerId;
     ctx.logger.info(
-      `list_seller_products: sellerId=${input.sellerId} site=${input.site} format=${input.format} page=${input.page} pageCount=${input.pageCount} categoryId=${input.categoryId ?? ""}`,
+      `list_seller_products: sellerId=${input.sellerId} site=${input.site} page=${input.page} pageCount=${input.pageCount} categoryId=${input.categoryId ?? ""}`,
     );
     return ctx.client.post("/api/v1/scrape", {
       site: input.site,
       content,
       parserName: "amzProductOfSeller",
-      format: input.format,
+      format: "json",
       timeout: 60000,
       ...(multiPage ? { pageCount: input.pageCount } : {}),
       ...(input.categoryId ? { categoryId: input.categoryId } : {}),

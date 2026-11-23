@@ -48,15 +48,6 @@ const inputSchema = z.object({
         en: "ZIP code that must match the site country (amz_us → US zip, amz_jp → JP zip, ...). Optional; backend picks a random one from the per-country pool when omitted. Cross-country zips (e.g. amz_us + JP zip) are rejected by the backend. Examples: 10001 (NY) / 90001 (LA) / 100-0001 (Tokyo).",
       }),
     ),
-  format: z
-    .enum(["json", "markdown"])
-    .default("json")
-    .describe(
-      t({
-        zh: "返回格式。默认 'json'——结构化类目商品列表。需要原始页面阅读时切 'markdown'。",
-        en: "Response format. Defaults to 'json' — structured category listings. Use 'markdown' for the rendered page text.",
-      }),
-    ),
   page: z
     .number()
     .int()
@@ -91,13 +82,13 @@ Cost: ~1 point/page, ~5s. **Only paginate when the user explicitly asks for more
     const content =
       input.page > 1 ? `${input.nodeId}?page=${input.page}` : input.nodeId;
     ctx.logger.info(
-      `list_category_products: nodeId=${input.nodeId} site=${input.site} format=${input.format} page=${input.page}`,
+      `list_category_products: nodeId=${input.nodeId} site=${input.site} page=${input.page}`,
     );
     return ctx.client.post("/api/v1/scrape", {
       site: input.site,
       content,
       parserName: "amzProductOfCategory",
-      format: input.format,
+      format: "json",
       timeout: 60000,
       ...(input.zipcode ? { bizContext: { zipcode: input.zipcode } } : {}),
     });

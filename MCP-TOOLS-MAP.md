@@ -1,6 +1,6 @@
 # Pangolinfo MCP tool map
 
-Version 0.12.0: 22 registered tools (21 business tools plus free local introspection).
+Version 0.13.0: 22 registered tools (21 business tools plus free local introspection).
 
 ## Discovery
 
