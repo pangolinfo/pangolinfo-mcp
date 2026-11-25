@@ -3,10 +3,10 @@ import assert from "node:assert/strict";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { getAmazonReviews } from "../src/tools/get_amazon_reviews.js";
 
-test("review schema exposes Italy/Spain/Brazil and preserves the existing eleven sites", () => {
+test("review schema exposes Netherlands/Poland/Belgium and preserves the existing fourteen sites", () => {
   const sites = [
     "amz_us", "amz_de", "amz_uk", "amz_jp", "amz_fr", "amz_it", "amz_es", "amz_br",
-    "amz_au", "amz_mx", "amz_in", "amz_eg", "amz_ae", "amz_ca",
+    "amz_au", "amz_mx", "amz_in", "amz_eg", "amz_ae", "amz_ca", "amz_nl", "amz_pl", "amz_be",
   ];
   const schema = zodToJsonSchema(getAmazonReviews.inputSchema) as any;
   assert.deepEqual(schema.properties.site.enum, sites);
@@ -31,11 +31,14 @@ test("France review request maps to amazon.fr with the supplied two-page example
   }]]);
 });
 
-// 2026-10-15 上游新增意/西/巴三站，示例 ASIN 取自 Randy 提供的上线 curl
+// 2026-10-15 上游新增意/西/巴三站；2026-11-25 新增荷/波/比三站。示例 ASIN 取自 Randy 提供的上线 curl
 for (const [site, domain, asin] of [
   ["amz_it", "www.amazon.it", "B0DN67T63N"],
   ["amz_es", "www.amazon.es", "B0FDB3Y1YT"],
   ["amz_br", "www.amazon.com.br", "B089Y5NKDR"],
+  ["amz_nl", "www.amazon.nl", "B0CV4XQP29"],
+  ["amz_pl", "www.amazon.pl", "B0FQTVXYGQ"],
+  ["amz_be", "www.amazon.com.be", "B0BZVVL3WM"],
 ] as const) {
   test(`${site} review request maps to ${domain} with the two-page example`, async () => {
     const calls: any[] = [];

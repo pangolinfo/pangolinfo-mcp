@@ -36,6 +36,9 @@ const REVIEW_SUPPORTED_SITES = [
   "amz_eg",
   "amz_ae",
   "amz_ca",
+  "amz_nl",
+  "amz_pl",
+  "amz_be",
 ] as const;
 
 type ReviewSite = (typeof REVIEW_SUPPORTED_SITES)[number];
@@ -55,6 +58,9 @@ const SITE_TO_DOMAIN: Record<ReviewSite, string> = {
   amz_eg: "www.amazon.eg",
   amz_ae: "www.amazon.ae",
   amz_ca: "www.amazon.ca",
+  amz_nl: "www.amazon.nl",
+  amz_pl: "www.amazon.pl",
+  amz_be: "www.amazon.com.be",
 };
 
 const inputSchema = z.object({
@@ -73,8 +79,8 @@ const inputSchema = z.object({
   site: z.enum(REVIEW_SUPPORTED_SITES).default("amz_us")
     .describe(
       t({
-        zh: "Amazon 评论站点，支持法国 amz_fr、意大利 amz_it、西班牙 amz_es、巴西 amz_br、日本 amz_jp 等 14 个站点。默认 amz_us。",
-        en: "Amazon review marketplace: 14 supported sites including France (amz_fr), Italy (amz_it), Spain (amz_es), Brazil (amz_br) and Japan (amz_jp). Defaults to amz_us.",
+        zh: "Amazon 评论站点，支持法国 amz_fr、意大利 amz_it、西班牙 amz_es、巴西 amz_br、荷兰 amz_nl、波兰 amz_pl、比利时 amz_be、日本 amz_jp 等 17 个站点。默认 amz_us。",
+        en: "Amazon review marketplace: 17 supported sites including France (amz_fr), Italy (amz_it), Spain (amz_es), Brazil (amz_br), the Netherlands (amz_nl), Poland (amz_pl), Belgium (amz_be) and Japan (amz_jp). Defaults to amz_us.",
       }),
     ),
   pageCount: z
