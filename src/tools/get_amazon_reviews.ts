@@ -113,6 +113,15 @@ const inputSchema = z.object({
         en: "Filter by star rating. For VOC pain-point mining, pass 'critical' (1-3 star reviews) to surface defects; for positive-aspect extraction, pass 'positive'.",
       }),
     ),
+  filterByKeyword: z
+    .string()
+    .optional()
+    .describe(
+      t({
+        zh: "按关键词筛选该商品的评论，例如 'great'。省略时不按关键词筛选。",
+        en: "Filter reviews for this product by keyword, e.g. 'great'. Omit to fetch reviews without a keyword filter.",
+      }),
+    ),
   sortBy: z
     .enum(["recent", "helpful"])
     .default("recent")
@@ -145,9 +154,9 @@ const inputSchema = z.object({
 export const getAmazonReviews: Tool<typeof inputSchema> = {
   name: "get_amazon_reviews",
   description: t({
-    zh: `[Amazon 评论批量抓取] 翻页拉某 ASIN 的真实买家评论。可按星级/排序/媒体类型过滤。
+    zh: `[Amazon 评论批量抓取] 翻页拉某 ASIN 的真实买家评论。支持按关键词、星级和媒体类型筛选，以及按时间或帮助票数排序。
 Use when: 用户说"看一下 X 的差评""挖痛点""分析竞品评论""做 VOC""为 Listing 找用户原声"；或新品立项前差评扫描；或 listing 优化要找改进点。
-Don't use: 只看 PDP 自带的几条评论摘要（用 get_amazon_product，里面已含 5-10 条 reviews 和 aiReviewsSummary，对快速判断已经够）；做关键词搜索（用 search_amazon）。
+Don't use: 只看 PDP 自带的几条评论摘要（用 get_amazon_product，里面已含 5-10 条 reviews 和 aiReviewsSummary，对快速判断已经够）；按关键词搜索商品（用 search_amazon）。
 Returns: data.json[0].data = { totalReviews（商品评论总数，无信息时为空串）, results[{ asin, reviewId, date, country, star, title, content, author, authorId, authorLink, imgs[], videos, purchased, vineVoice, helpful, attributes }] } — 1 页约 10 条评论。
 Locale: date/country 分别提取并保留页面语言原文，例如 date="2026年7月16日"、country="日本"；无法识别时为空串。country 是评论实际国家，可能与请求站点不同，不要用 site 覆盖或将 date 当作统一 ISO 格式。
 Redirects: 已确认重定向返回 9206，message 含目标 ASIN；MCP 映射 ASIN_REDIRECTED、retriable=no 并保留 pointCost。原请求正常计费，不自动重试或请求目标。空评论可能补查商品页，增加耗时但不另收费。
@@ -155,9 +164,9 @@ ASIN: 优先返回评论自身的变体 ASIN；缺失时使用页面商品 ASIN�
 Pair with: ↑ asin 常来自 search_amazon / get_amazon_product / list_bestsellers；↓ 评论文本可直接给 LLM 做痛点聚类、关键词提取。
 Cost: **10 积点/页**（贵）。建议先 pageCount=1 探一下，确认有数据再 pageCount=3~5 扩量。filterByStar='critical' 优先（差评信号密度最高）。
 Tips: filterByStar 取值 = all_stars / five_star ... one_star / positive / critical；sortBy = recent (默认) | helpful；mediaType = all_contents (默认) | media_reviews_only (带图带视频，真实度更高)。`,
-    en: `[Amazon review batch scrape] Page-fetch real buyer reviews for an ASIN. Filterable by star / sort / media type.
+    en: `[Amazon review batch scrape] Fetch pages of buyer reviews for an ASIN. Filter by keyword, star rating, or media type and sort by recency or helpful votes.
 Use when: user says "look at X's negative reviews" / "mine pain points" / "analyse competitor reviews" / "do VOC" / "find user complaints for Listing copy"; or pre-launch critical-review scan; or finding improvement points for listing optimization.
-Don't use: when the few reviews already in the PDP would suffice (get_amazon_product carries 5-10 reviews + aiReviewsSummary — enough for a quick read); for keyword search (use search_amazon).
+Don't use: when the few reviews already in the PDP would suffice (get_amazon_product carries 5-10 reviews + aiReviewsSummary — enough for a quick read); for product keyword search (use search_amazon).
 Returns: data.json[0].data = { totalReviews (total review count; empty when unavailable), results[{ asin, reviewId, date, country, star, title, content, author, authorId, authorLink, imgs[], videos, purchased, vineVoice, helpful, attributes }] } — ~10 reviews per page.
 Locale: date/country are extracted separately in the page language, e.g. date="2026年7月16日", country="日本"; empty strings when unrecognized. Country is the review's actual region and may differ from site. Do not replace it with site or assume date uses ISO format.
 Redirects: Confirmed redirects return 9206 with the destination ASIN in message; MCP maps ASIN_REDIRECTED with retriable=no and preserves pointCost. The original request is billed normally; do not automatically retry or fetch the destination. Empty reviews may trigger product-page verification, adding latency without a separate charge.
@@ -184,6 +193,7 @@ Tips: filterByStar = all_stars / five_star ... one_star / positive / critical; s
         pageCount: input.pageCount,
         asin,
         filterByStar: input.filterByStar,
+        ...(input.filterByKeyword !== undefined ? { filterByKeyword: input.filterByKeyword } : {}),
         sortBy: input.sortBy,
         ...(input.zipcode ? { zipcode: input.zipcode } : {}),
       },

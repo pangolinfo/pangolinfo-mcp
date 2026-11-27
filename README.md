@@ -260,7 +260,7 @@ If you're calling the endpoint directly (not through a standard MCP client):
 | `get_amazon_product` | Amazon product details | 1/page |
 | `get_amazon_videos` | Amazon main-media popup, Premium A+ and Product Videos | 1 point per successful snapshot |
 | `get_amazon_delivery_time` | Product details plus delivery estimates | 2 |
-| `get_amazon_reviews` | Amazon buyer reviews | 5/page |
+| `get_amazon_reviews` | Amazon buyer reviews with optional `filterByKeyword` | 5/page |
 | `list_bestsellers` | Best sellers | 1/page |
 | `list_new_releases` | New releases | 1/page |
 | `list_seller_products` | Seller listings | 1/page |

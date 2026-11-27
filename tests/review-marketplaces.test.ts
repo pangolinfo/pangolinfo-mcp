@@ -31,6 +31,28 @@ test("France review request maps to amazon.fr with the supplied two-page example
   }]]);
 });
 
+test("optional review keyword is exposed in the schema and forwarded verbatim", async () => {
+  const schema = zodToJsonSchema(getAmazonReviews.inputSchema) as any;
+  assert.equal(schema.properties.filterByKeyword.type, "string");
+  assert.ok(!schema.required.includes("filterByKeyword"));
+  const keyword = "great 商品 + value";
+  const input = getAmazonReviews.inputSchema.parse({ asin: "B0F8MHPVPH", pageCount: 2, filterByKeyword: keyword });
+  const ctx = {
+    logger: { info() {} },
+    client: {
+      async post(path: string, body: { bizContext: Record<string, unknown> }) {
+        assert.equal(path, "/api/v1/scrape");
+        assert.deepEqual(body.bizContext, {
+          bizKey: "review", pageCount: 2, asin: "B0F8MHPVPH", filterByStar: "all_stars",
+          filterByKeyword: keyword, sortBy: "recent",
+        });
+        return "sent";
+      },
+    },
+  } as any;
+  assert.equal(await getAmazonReviews.execute(input, ctx), "sent");
+});
+
 // 2026-10-15 上游新增意/西/巴三站；2026-11-25 新增荷/波/比三站。示例 ASIN 取自 Randy 提供的上线 curl
 for (const [site, domain, asin] of [
   ["amz_it", "www.amazon.it", "B0DN67T63N"],
